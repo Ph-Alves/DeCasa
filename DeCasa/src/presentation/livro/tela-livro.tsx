@@ -1,32 +1,42 @@
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import type { Receita } from '../../domain/receita/receita.ts';
+import { correspondeBusca, type Rascunho, type Receita } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
-import { cores, espaco, fontes, raios, sombras, tamanhos } from '../ui/tokens.ts';
+import { Aviso, Botao, Tela } from '../ui/componentes.tsx';
+import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from '../ui/tokens.ts';
 
-/**
- * RF01. Por enquanto só lê o livro do SQLite (prova de que banco, casos de uso e tokens estão ligados).
- * shortcut: grade de cards, busca e botões entram na etapa das telas.
- */
+const CORES_DO_TILE = [cores.papel, cores.salviaClara, cores.mostardaClara];
+
+/** RF01, RF02 e RF03 (rascunho pendente). */
 export function TelaLivro() {
-  const { consultar } = useDependencias();
+  const { consultar, rascunho } = useDependencias();
   const [nome, setNome] = useState('');
   const [receitas, setReceitas] = useState<Receita[] | null>(null);
+  const [pendente, setPendente] = useState<Rascunho | null>(null);
+  const [busca, setBusca] = useState('');
 
   useFocusEffect(
     useCallback(() => {
       consultar.livro().then((l) => setNome(l.nome));
       consultar.listar().then(setReceitas);
-    }, [consultar]),
+      rascunho.recuperar().then(setPendente);
+    }, [consultar, rascunho]),
   );
 
+  async function descartarPendente() {
+    if (pendente) await rascunho.descartar(pendente);
+    setPendente(null);
+  }
+
+  // Busca em memória: o livro já está carregado e o domínio ignora acento (RF02).
+  const visiveis = receitas?.filter((r) => correspondeBusca(r, busca)) ?? [];
   const total = receitas?.length ?? 0;
+
   return (
-    <SafeAreaView style={estilos.tela} edges={['top']}>
-      <ScrollView contentContainerStyle={estilos.conteudo}>
+    <Tela acao={<Botao titulo="＋  Nova receita" aoTocar={() => router.push('/nova')} />}>
+      <View>
         <Text style={estilos.rotulo}>De Casa, o caderninho da família</Text>
         <Text style={estilos.titulo} accessibilityRole="header">{nome}</Text>
         {receitas && (
@@ -34,41 +44,108 @@ export function TelaLivro() {
             {total === 1 ? '1 receita guardada' : `${total} receitas guardadas`} neste aparelho
           </Text>
         )}
+      </View>
 
-        {receitas?.length === 0 && (
-          <View style={estilos.vazio}>
-            <Text style={estilos.vazioTitulo}>O caderninho ainda está em branco</Text>
-            <Text style={estilos.vazioTexto}>Grave, fotografe ou escreva a primeira receita da família.</Text>
+      {pendente && (
+        <View style={{ gap: espaco[8] }}>
+          <Aviso>Você começou a receita "{pendente.titulo.trim() || 'sem nome'}" e ainda não salvou no livro.</Aviso>
+          <View style={estilos.linha}>
+            <Botao tipo="secundario" titulo="Continuar" aoTocar={() => router.push('/revisar')} />
+            <Botao tipo="perigo" titulo="Descartar" aoTocar={descartarPendente} rotuloAcessivel="Descartar a receita em andamento" />
           </View>
-        )}
+        </View>
+      )}
 
-        {receitas?.map((r) => (
-          <View key={r.id} style={estilos.card}>
-            <Text style={estilos.cardTitulo}>{r.titulo}</Text>
-            {r.autorNome && <Text style={estilos.cardAutor}>por {r.autorNome}</Text>}
-          </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+      {total > 0 && (
+        <TextInput
+          value={busca}
+          onChangeText={setBusca}
+          placeholder="Buscar por nome, quem ensinou ou ingrediente"
+          placeholderTextColor={cores.cafeSuave}
+          accessibilityLabel="Buscar receita"
+          style={estilos.busca}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+      )}
+
+      {receitas?.length === 0 && (
+        <View style={estilos.vazio}>
+          <Text style={estilos.vazioTitulo}>O caderninho ainda está em branco</Text>
+          <Text style={estilos.vazioTexto}>Toque em "Nova receita" para guardar a primeira receita da família.</Text>
+        </View>
+      )}
+
+      {total > 0 && visiveis.length === 0 && (
+        <Text style={estilos.vazioTexto}>Nenhuma receita com "{busca}".</Text>
+      )}
+
+      <View style={estilos.grade}>
+        {visiveis.map((r) => <CardDeReceita key={r.id} receita={r} />)}
+      </View>
+    </Tela>
+  );
+}
+
+function CardDeReceita({ receita }: { receita: Receita }) {
+  const temAudio = receita.midias.some((m) => m.tipo === 'audio');
+  const cor = CORES_DO_TILE[receita.id.charCodeAt(0) % CORES_DO_TILE.length];
+  const rotulo = [receita.titulo, receita.autorNome && `por ${receita.autorNome}`, temAudio && 'com áudio'].filter(Boolean).join(', ');
+
+  return (
+    <Pressable
+      style={({ pressed }) => [estilos.card, pressed && { opacity: 0.85 }]}
+      onPress={() => router.push(`/receita/${receita.id}`)}
+      accessibilityRole="button"
+      accessibilityLabel={rotulo}
+    >
+      {/* shortcut: o xadrez do tile precisa de SVG; por enquanto é cor lisa. */}
+      <View style={[estilos.tile, { backgroundColor: cor }]}>
+        <View style={estilos.inicial}>
+          <Text style={estilos.inicialTexto}>{receita.titulo.trim().charAt(0).toUpperCase()}</Text>
+        </View>
+        {temAudio && <Text style={estilos.tagAudio}>🎙 áudio da vó</Text>}
+      </View>
+      <View style={estilos.cardTexto}>
+        <Text style={estilos.cardTitulo} numberOfLines={2}>{receita.titulo}</Text>
+        {receita.autorNome && <Text style={estilos.cardAutor} numberOfLines={1}>por {receita.autorNome}</Text>}
+      </View>
+    </Pressable>
   );
 }
 
 const estilos = StyleSheet.create({
-  tela: { flex: 1, backgroundColor: cores.farinha },
-  conteudo: { padding: espaco.tela, gap: espaco[4] },
   rotulo: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloM, color: cores.terracota },
   titulo: { fontFamily: fontes.titulo, fontSize: tamanhos.display, color: cores.cafe },
   subtitulo: { fontFamily: fontes.corpoMedio, fontSize: tamanhos.pequeno, color: cores.cafeSuave },
+  linha: { flexDirection: 'row', gap: espaco[8], alignItems: 'center' },
+  busca: {
+    minHeight: toque.minimo, borderRadius: raios.pilula44, borderWidth: 1.5, borderColor: cores.bordaControle,
+    backgroundColor: cores.cartao, paddingHorizontal: espaco[16], fontFamily: fontes.corpo, fontSize: tamanhos.corpo, color: cores.cafe,
+  },
   vazio: {
-    marginTop: espaco[22], padding: espaco[22], gap: espaco[8], borderRadius: raios.card,
+    padding: espaco[22], gap: espaco[8], borderRadius: raios.card,
     backgroundColor: cores.cartao, borderWidth: 1, borderColor: cores.borda, ...sombras.card,
   },
   vazioTitulo: { fontFamily: fontes.tituloMedio, fontSize: tamanhos.tituloS, color: cores.cafe },
   vazioTexto: { fontFamily: fontes.corpo, fontSize: tamanhos.corpo, lineHeight: 24, color: cores.cafeSuave },
+  grade: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco[14] },
   card: {
-    marginTop: espaco[12], padding: espaco[16], borderRadius: raios.card,
-    backgroundColor: cores.cartao, borderWidth: 1, borderColor: cores.borda, ...sombras.card,
+    width: '47.5%', borderRadius: raios.card, backgroundColor: cores.cartao,
+    borderWidth: 1, borderColor: cores.borda, overflow: 'hidden', ...sombras.card,
   },
-  cardTitulo: { fontFamily: fontes.tituloMedio, fontSize: tamanhos.tituloS, color: cores.cafe },
-  cardAutor: { fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, color: cores.cafeSuave },
+  tile: { height: 110, alignItems: 'center', justifyContent: 'center' },
+  inicial: {
+    width: 52, height: 52, borderRadius: 26, backgroundColor: cores.farinha,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  inicialTexto: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloL, color: cores.cafe },
+  tagAudio: {
+    position: 'absolute', left: espaco[8], bottom: espaco[8], backgroundColor: cores.farinha,
+    borderRadius: raios.campo, paddingHorizontal: espaco[8], paddingVertical: espaco[2],
+    fontFamily: fontes.corpoNegrito, fontSize: tamanhos.legenda, color: cores.cafe, overflow: 'hidden',
+  },
+  cardTexto: { padding: espaco[12], gap: espaco[2] },
+  cardTitulo: { fontFamily: fontes.titulo, fontSize: tamanhos.corpo + 1, color: cores.cafe },
+  cardAutor: { fontFamily: fontes.corpo, fontSize: tamanhos.legenda, color: cores.cafeSuave },
 });

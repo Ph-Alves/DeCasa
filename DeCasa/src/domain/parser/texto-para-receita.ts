@@ -117,3 +117,18 @@ export function textoParaReceita(texto: string): ReceitaExtraida {
 export function rascunhoDoTexto(texto: string, origem: Origem, midias: Midia[] = []): Rascunho {
   return { ...rascunhoVazio(origem), ...textoParaReceita(texto), midias };
 }
+
+/** Uma linha da caixa "Ingredientes" da revisão (RF03): sempre vira ingrediente, com ou sem quantidade. */
+export function ingredienteDaLinha(linha: string): Omit<Ingrediente, 'id'> | null {
+  const limpa = linha.trim().replace(MARCADOR_DE_LISTA, '');
+  return limpa ? lerIngrediente(limpa, true) : null;
+}
+
+/** O caminho de volta: "2 xícaras de fubá", "3 ovos", "sal a gosto". */
+export function textoDoIngrediente(i: Omit<Ingrediente, 'id'>): string {
+  const { valor, texto } = i.quantidade;
+  if (valor === null && texto) return texto === 'um pouco' ? `um pouco de ${i.nome}` : `${i.nome} ${texto}`;
+  const quanto = [texto, i.unidade].filter(Boolean).join(' ');
+  if (!quanto) return i.nome;
+  return i.unidade ? `${quanto} de ${i.nome}` : `${quanto} ${i.nome}`;
+}

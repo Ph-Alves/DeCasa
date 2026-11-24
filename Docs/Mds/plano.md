@@ -90,6 +90,18 @@ Não testado em aparelho: o `abrirBanco()` real (expo-sqlite precisa do app roda
 - `ConsultarReceitas.livro()` para o nome no cabeçalho.
 - Conferido no simulador iOS (Expo Go): tela do livro com as fontes e o nome vindo do SQLite.
 
+## 3.4 Feito: telas do livro e do cadastro por texto (RF01 a RF03, RF08 a RF10)
+
+- **Livro** (`/`): grade de 2 colunas com inicial em Caveat e tag de áudio, busca sem acento em memória, aviso de rascunho pendente (Continuar ou Descartar), estado vazio e "Nova receita" fixo embaixo.
+- **Nova receita** (`/nova`): só a aba Texto por enquanto; o parser separa e abre a revisão.
+- **Revisar** (`/revisar`): ingredientes e passos um por linha (RF03), linhas não classificadas à parte (RF07), erros de validação do domínio no topo. Rascunho guardado sozinho 600 ms depois de cada mudança; sair pergunta (guardar, descartar, continuar), inclusive pelo voltar do Android, e o gesto de arrastar fica desligado.
+- **Receita** (`/receita/[id]`): capa, caderno pautado em Caveat, passos numerados, ponto e "quando faz", editar (reabre a revisão) e excluir com confirmação.
+- Um rascunho só por vez: ao começar outro, o app pergunta se continua o anterior ou descarta.
+- Domínio: `ingredienteDaLinha` e `textoDoIngrediente` (ida e volta testada).
+- Conferido no simulador iOS por deep link, com receitas gravadas pelo próprio `SalvarReceitaRevisada`: livro, receita e revisão abrem com os dados. **Não conferido:** digitar, salvar pelo botão e os alertas (não dá para tocar no simulador daqui).
+
+Limites: o tile não tem xadrez (precisa de SVG); player de áudio, escala, lista e modo cozinha entram nas próximas etapas.
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.

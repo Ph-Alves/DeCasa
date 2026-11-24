@@ -9,7 +9,7 @@ import {
 } from './receita/receita.ts';
 import { escalar } from './porcoes/escalar.ts';
 import { consolidarItens, type ItemCompra } from './compras/item-compra.ts';
-import { textoParaReceita } from './parser/texto-para-receita.ts';
+import { ingredienteDaLinha, textoDoIngrediente, textoParaReceita } from './parser/texto-para-receita.ts';
 
 test('normalizar tira acento e caixa', () => {
   assert.equal(normalizar('  Açúcar   MASCAVO '), 'acucar mascavo');
@@ -142,4 +142,12 @@ test('parser é determinístico e não quebra com texto vazio ou estranho', () =
   assert.deepEqual(r.naoClassificado, ['Massa:']);
   assert.deepEqual(r.ingredientes.map((i) => [i.quantidade.valor, i.unidade, i.nome]), [[200, 'g', 'farinha']]);
   assert.deepEqual(textoParaReceita('   \n\n'), { titulo: '', ingredientes: [], passos: [], naoClassificado: [] });
+});
+
+test('ingrediente vai e volta da caixa de texto da revisão (RF03)', () => {
+  for (const linha of ['2 xícaras de fubá', '3 ovos', 'sal a gosto', 'um pouco de canela', 'Manteiga para untar', '1 1/2 colher de sopa de fermento']) {
+    assert.equal(textoDoIngrediente(ingredienteDaLinha(linha)!), linha);
+  }
+  assert.equal(ingredienteDaLinha('- 200g farinha')?.unidade, 'g');
+  assert.equal(ingredienteDaLinha('   '), null);
 });

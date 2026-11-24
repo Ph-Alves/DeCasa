@@ -112,7 +112,9 @@ src/
     pdf/            gerador de PDF                   (a fazer)
   presentation/
     ui/tokens.ts    cores, fontes, medidas e sombras do design system
-    livro/          tela do livro
+    ui/componentes  Tela, Cabeçalho, Botão, Campo, Aviso
+    livro/          livro com grade, busca e rascunho pendente
+    receita/        nova receita, revisar, ver, editar e excluir
   main/             composition root: abre o banco e entrega os casos de uso às telas
 ```
 
@@ -160,7 +162,7 @@ Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from 
 - [x] Casos de uso e ports (`application/`)
 - [x] Persistência SQLite
 - [x] Composition root, tokens do design system e fontes
-- [ ] Telas: livro, cadastro por texto, revisão
+- [x] Telas: livro, cadastro por texto, revisão, ver, editar e excluir
 - [ ] Áudio, foto e OCR
 - [ ] Modo cozinha, escala e lista de compras
 - [ ] Exportar e importar PDF
