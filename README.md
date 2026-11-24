@@ -58,7 +58,7 @@ Os documentos do projeto ficam em [`Docs/`](Docs/):
 | App | React Native + Expo SDK 58 (dev build), Expo Router, TypeScript |
 | Banco local | `expo-sqlite` |
 | Áudio | `expo-audio` |
-| Foto e OCR | `expo-camera` + ML Kit (no aparelho) |
+| Foto e OCR | `expo-image-picker` + `expo-text-extractor` (Vision no iOS, ML Kit no Android, no aparelho) |
 | Transcrição | `expo-speech-recognition` ou `whisper.rn` (a definir) |
 | PDF | `expo-print`, `expo-sharing`, `expo-document-picker` |
 | Tela acesa | `expo-keep-awake` |
@@ -108,7 +108,7 @@ src/
     intercambio/    apêndice de dados do PDF (exportar e importar)
   adapters/
     persistence/    SQLite: migrações e repositórios
-    native/         mídia, gravação (expo-audio), permissões, ids, relógio; fala e OCR a fazer
+    native/         mídia, gravação (expo-audio), permissões, ids, relógio; OCR; fala a fazer
     pdf/            modelo HTML do livro e gerador (expo-print)
   presentation/
     ui/tokens.ts    cores, fontes, medidas e sombras do design system
@@ -145,7 +145,7 @@ npx expo start          # depois disso, só isto
 
 As pastas `ios/` e `android/` são geradas pelo Expo (Continuous Native Generation) e não vão para o Git: toda configuração nativa fica no `app.json`. Identificador do app: `com.phalves.decasa`.
 
-Até as etapas de OCR e transcrição, o projeto também abre no Expo Go.
+Desde a etapa de foto e OCR, o projeto só abre no dev build (o Expo Go não tem o módulo de OCR). Depois de mudar plugins no `app.json`, rode `npx expo prebuild -p ios --clean` antes do `run:ios`; sem isso as permissões novas não entram no Info.plist.
 
 Todos os comandos rodam dentro de `DeCasa/`.
 

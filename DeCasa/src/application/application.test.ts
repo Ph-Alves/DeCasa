@@ -251,6 +251,10 @@ test('foto: texto vai para o rascunho e a foto fica anexada (RF05)', async () =>
 
   app.ocr.texto = new Error('ocr caiu');
   assert.equal((await app.foto.extrair('foto3.jpg')).problema, 'falhou');
+
+  // Cancelou antes da revisão: a foto guardada é apagada.
+  await app.foto.descartar(ok.rascunho);
+  assert.deepEqual(app.apagados, ['app/foto.jpg']);
 });
 
 // ---------- Lista de compras ----------

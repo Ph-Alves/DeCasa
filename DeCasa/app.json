@@ -43,7 +43,14 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "O De Casa usa a câmera para fotografar a receita escrita e ler o texto dela. A foto fica só no seu aparelho.",
+          "photosPermission": "O De Casa abre suas fotos para você escolher a foto de uma receita escrita."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

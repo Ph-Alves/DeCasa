@@ -1,13 +1,13 @@
 import { router, Stack } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { BackHandler, StyleSheet, Text, View } from 'react-native';
+import { BackHandler, Image, StyleSheet, Text, View } from 'react-native';
 
 import { ingredienteDaLinha, textoDoIngrediente } from '../../domain/parser/texto-para-receita.ts';
 import type { Rascunho } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
 import { Aviso, Botao, Cabecalho, Campo, Tela } from '../ui/componentes.tsx';
 import { formatarTempo, PlayerDeAudio } from '../ui/player-audio.tsx';
-import { cores, espaco, fontes, tamanhos } from '../ui/tokens.ts';
+import { cores, espaco, fontes, raios, tamanhos } from '../ui/tokens.ts';
 import { perguntar } from './abrir-revisao.ts';
 
 /** O que a pessoa edita: tudo texto, como no caderno. Ingredientes e passos são um por linha (RF03). */
@@ -103,6 +103,7 @@ export function TelaRevisar() {
 
   if (!form) return null;
   const audio = base?.midias.find((m) => m.tipo === 'audio');
+  const foto = base?.midias.find((m) => m.tipo === 'foto');
   const mudar = (campo: keyof Formulario) => (valor: string) => setForm({ ...form, [campo]: valor });
 
   return (
@@ -118,7 +119,15 @@ export function TelaRevisar() {
         />
       )}
 
-      {audio && !audio.transcricao && !base?.receitaId ? (
+      {/* RF05: a foto fica ao lado do texto lido, para conferir. */}
+      {foto && (
+        <Image source={{ uri: uriDaMidia(foto.caminhoLocal) }} style={estilos.foto} resizeMode="contain"
+          accessibilityLabel="Foto da receita original" />
+      )}
+
+      {foto && !foto.transcricao && !base?.receitaId ? (
+        <Aviso>Não deu para ler o texto da foto. Escreva os ingredientes e o passo a passo olhando para ela. A foto fica guardada junto da receita.</Aviso>
+      ) : audio && !audio.transcricao && !base?.receitaId ? (
         <Aviso>Ouça a gravação e escreva os ingredientes e o passo a passo. O áudio fica guardado junto da receita. A transcrição automática ainda não está disponível.</Aviso>
       ) : (
         base?.origem !== 'texto' && !base?.receitaId && (
@@ -164,6 +173,7 @@ export function TelaRevisar() {
 }
 
 const estilos = StyleSheet.create({
+  foto: { width: '100%', height: 320, borderRadius: raios.card, backgroundColor: cores.cartao },
   nome: { fontFamily: fontes.tituloMedio, fontSize: tamanhos.tituloS },
   erros: { gap: espaco[4], padding: espaco[14], borderRadius: 14, borderWidth: 1.5, borderColor: cores.terracota, backgroundColor: cores.cartao },
   erroTexto: { fontFamily: fontes.corpoNegrito, fontSize: tamanhos.pequeno, color: cores.terracota },

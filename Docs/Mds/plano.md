@@ -142,6 +142,14 @@ Limites: o PDF usa Georgia e Helvetica (embutir as fontes do app fica para depoi
 - Para conectar a um servidor já aberto em modo Expo Go: `xcrun simctl openurl booted "exp+decasa://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081"`. Com `npx expo start` iniciado depois do dev client, o lançador acha o servidor sozinho.
 - Android ainda não: falta `ANDROID_HOME` e um JDK 17 nesta máquina.
 
+## 3.9 Feito: foto e OCR (RF05, RF07, RF17)
+
+- Aba **Foto** na "Nova receita": "Tirar foto da receita" (pede a câmera só nessa hora) e "Escolher foto do aparelho" (galeria, sem permissão no iOS 14+).
+- `expo-image-picker` já entrega a foto endireitada (EXIF), e o `expo-text-extractor` (Vision / ML Kit) lê o texto no aparelho. O texto passa pelo mesmo parser e vai para a revisão (RN02), com a foto no topo para conferir.
+- Se não houver texto ou o OCR falhar, a foto vai mesmo assim para a revisão, com um aviso. Se a pessoa cancelar antes da revisão, `CapturarPorFoto.descartar` apaga a foto.
+- Spike S2 (parcial, no Mac): o Vision com a configuração da lib (sem idioma definido) leu uma receita impressa com todos os acentos. Ainda falta testar letra de mão em aparelho real.
+- O `app.json` ganhou o plugin `expo-image-picker` com os textos de câmera e fotos. Lição: o `run:ios` não reaplica plugins numa pasta `ios/` que já existe. Use `prebuild --clean`.
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.

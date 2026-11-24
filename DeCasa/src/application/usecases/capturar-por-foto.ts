@@ -1,5 +1,6 @@
 import { rascunhoDoTexto } from '../../domain/parser/texto-para-receita.ts';
 import { rascunhoVazio, type Midia, type Rascunho } from '../../domain/receita/receita.ts';
+import { apagarArquivos } from './apagar-arquivos.ts';
 import type { IdGenerator, MidiaStorage, OcrEngine, PermissoesDoSistema, Relogio } from '../ports/plataforma.ts';
 
 type Deps = { ocr: OcrEngine; midias: MidiaStorage; permissoes: PermissoesDoSistema; ids: IdGenerator; relogio: Relogio };
@@ -34,5 +35,10 @@ export class CapturarPorFoto {
     }
     if (!texto.trim()) return soFoto('sem-texto');
     return { rascunho: rascunhoDoTexto(texto, 'foto', [{ ...foto, transcricao: texto }]), problema: null };
+  }
+
+  /** O rascunho não foi para a revisão (a pessoa cancelou): a foto guardada não pode ficar órfã. */
+  descartar(rascunho: Rascunho): Promise<void> {
+    return apagarArquivos(this.d.midias, rascunho.midias);
   }
 }
