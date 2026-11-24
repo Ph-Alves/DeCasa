@@ -135,6 +135,13 @@ Limites: sem a animação de ondas durante a gravação (e a versão estática p
 
 Limites: o PDF usa Georgia e Helvetica (embutir as fontes do app fica para depois); o áudio não vai no PDF (como no desenho original).
 
+## 3.8 Feito: dev build (iOS)
+
+- `expo-dev-client` instalado; `app.json` com `bundleIdentifier` e `package` = `com.phalves.decasa`.
+- `npx expo run:ios` gerou `ios/` (fora do Git, CNG), instalou os pods e compilou sem erros (2 avisos de script do Xcode). O app "De Casa" abre no simulador e carrega o livro com dados próprios (outro contêiner, separado do Expo Go).
+- Para conectar a um servidor já aberto em modo Expo Go: `xcrun simctl openurl booted "exp+decasa://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081"`. Com `npx expo start` iniciado depois do dev client, o lançador acha o servidor sozinho.
+- Android ainda não: falta `ANDROID_HOME` e um JDK 17 nesta máquina.
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.

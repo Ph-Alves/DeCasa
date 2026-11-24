@@ -132,7 +132,20 @@ npm install
 npx expo start
 ```
 
-Com o servidor rodando, abra no Expo Go, no simulador iOS (`i`) ou no emulador Android (`a`). Quando entrarem câmera, áudio, OCR e transcrição, o app vai precisar de **dev build** (`npx expo run:ios` ou `npx expo run:android`), porque esses módulos não rodam no Expo Go.
+### Dev build
+
+OCR, transcrição e leitura de PDF usam bibliotecas nativas que não existem no Expo Go, então o app roda num **dev build** (um "Expo Go" próprio, com os módulos do projeto). Ele é compilado uma vez e só precisa ser refeito quando entra uma biblioteca nativa nova; no dia a dia o comando continua sendo `npx expo start`.
+
+```bash
+cd DeCasa
+npx expo run:ios        # compila e instala no simulador (precisa de Xcode e CocoaPods)
+npx expo run:android    # precisa do SDK do Android, ANDROID_HOME e JDK 17
+npx expo start          # depois disso, só isto
+```
+
+As pastas `ios/` e `android/` são geradas pelo Expo (Continuous Native Generation) e não vão para o Git: toda configuração nativa fica no `app.json`. Identificador do app: `com.phalves.decasa`.
+
+Até as etapas de OCR e transcrição, o projeto também abre no Expo Go.
 
 Todos os comandos rodam dentro de `DeCasa/`.
 
