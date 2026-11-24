@@ -20,8 +20,8 @@ Igual à seção 7 da arquitetura. Dependências só para dentro: `presentation`
 ```
 src/
   app/            rotas Expo Router (finas)
-  domain/         FEITO (esta sessão)
-  application/    ports/, usecases/, intercambio/
+  domain/         FEITO
+  application/    FEITO: ports/, usecases/, intercambio/
   adapters/       persistence/ (SQLite), native/, pdf/
   presentation/   telas por funcionalidade + ui/ (tokens do moodboard)
   main/           composition root (injeção manual)
@@ -45,9 +45,33 @@ Limites conhecidos (marcados com `shortcut:` no código):
 - Escala não põe a unidade no plural ("2 xícara").
 - O parser não separa vários ingredientes numa só frase falada ("duas xícaras de fubá, uma de açúcar e três ovos" vira um passo). Rever depois do spike S1, com transcrições reais.
 
+## 3.1 Feito: camada `application/`
+
+Ports em `ports/repositorios.ts` e `ports/plataforma.ts`. Casos de uso em `usecases/`, testados com fakes (`application.test.ts`, 16 testes).
+
+| Caso de uso | Requisitos | Observação |
+|---|---|---|
+| `ConsultarReceitas` (listar, buscar, ver) | RF01, RF02, RF09 | Busca em memória; por isso `ReceitaRepository` não tem `buscar` |
+| `SalvarReceitaRevisada` | RF03, RF08, RF10, RN02 | Único que grava receita; serve para criar, editar e importar. Na edição, apaga os arquivos de mídia removidos |
+| `GerenciarRascunho` (guardar, recuperar, concluir, descartar) | RF03, RF08, RNF08 | `concluir` depois de salvar; `descartar` apaga só as mídias órfãs |
+| `ExcluirReceita` | RF10 | Banco primeiro, arquivos depois |
+| `CapturarPorVoz` (iniciar, parar, descartar, transcrever) | RF04, RF06, RF07, RF17 | O áudio fica no rascunho mesmo sem transcrição (`problema`: sem-permissao, indisponivel, cancelada, falhou) |
+| `CapturarPorFoto` (pedirCamera, extrair) | RF05, RF07, RF17 | Texto do OCR guardado na mídia, para comparar na revisão |
+| `ListaDeCompras` | RF12, RF13, RN04 | Lista inteira regravada e consolidada a cada mudança |
+| `ExportarLivroPdf` (gerar, compartilhar, imprimir) | RF14 | Nome do livro alterado fica salvo |
+| `ImportarPdf` (escolherArquivo, ler, confirmar) | RF15, RF16 | `ler` nunca grava; `confirmar` usa `SalvarReceitaRevisada`. "Substituir" mantém áudio e fotos da receita do livro |
+| `intercambio/apendice.ts` | RF14, RF15, RNF09 | Linhas `DC1|n/total|base64|checksum`; conteúdo validado campo a campo, com limites de tamanho |
+
+Diferenças em relação à arquitetura 2.2:
+- `EscalarPorcoes` e o modo cozinha não têm caso de uso: a tela usa `escalar` do domínio direto (D9).
+- Ports novos: `LivroRepository` (nome do livro no PDF), `PdfTextExtractor.rasterize` (PDF escaneado, spike S4), `GeradorDePdf.imprimir`, `MidiaStorage.espacoUsado` (RNF10) e a classe `ArquivoInvalidoError`.
+- `Rascunho.receitaId` diferencia cadastro novo de edição.
+
+Ainda não coberto: transcrever áudio escolhido de arquivo (RF06 cita "ou escolhido").
+
 ## 4. Próximas etapas (em ordem)
 
-1. **`application/`**: ports (como na seção 2.2 da arquitetura) e os casos de uso, testados com fakes. Começar por `SalvarReceitaRevisada` (RN02), `GerenciarRascunho`, `Listar/BuscarReceitas`, `EscalarPorcoes`, `GerarListaDeCompras`. Depois o codec do apêndice do PDF (`intercambio/`) com teste de ida e volta.
+1. ~~`application/`~~ feito.
 2. **Regra de dependência no lint**: `npx expo lint` (instala o ESLint do Expo) + `no-restricted-imports` por pasta. Não precisa de plugin extra.
 3. **`adapters/persistence/`**: `expo-sqlite` com migrações, repositórios e mapeadores; transação em `salvar` (RNF08).
 4. **`main/`**: composition root e contexto React.

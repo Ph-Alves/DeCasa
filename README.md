@@ -102,7 +102,10 @@ src/
     parser/         texto corrido → ingredientes e passos
     porcoes/        escala de porções
     compras/        lista de compras e consolidação
-  application/      casos de uso e ports            (próxima etapa)
+  application/
+    ports/          interfaces: repositórios e plataforma (áudio, fala, OCR, PDF...)
+    usecases/       um arquivo por caso de uso
+    intercambio/    apêndice de dados do PDF (exportar e importar)
   adapters/         SQLite, nativos, PDF            (a fazer)
   presentation/     telas e componentes             (a fazer)
   main/             composition root                (a fazer)
@@ -138,14 +141,16 @@ cd DeCasa
 npm test
 ```
 
-Cobre: leitura de quantidades e frações, escala de porções, consolidação da lista de compras, validação de receita, duplicatas, busca sem acento e o parser com receitas de caderno e texto falado.
+Domínio: leitura de quantidades e frações, escala de porções, consolidação da lista de compras, validação de receita, duplicatas, busca sem acento e o parser com receitas de caderno e texto falado.
 
-Por isso os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from '../texto.ts'`), com `allowImportingTsExtensions` ligado no `tsconfig.json`.
+Casos de uso: testados com implementações falsas (em memória) dos ports, sem aparelho. Cobrem salvar, editar e excluir, rascunho, busca, captura por voz e foto (inclusive sem permissão ou sem transcrição), lista de compras, ida e volta do apêndice do PDF (inclusive adulterado) e importação com duplicatas.
+
+Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from '../texto.ts'`), com `allowImportingTsExtensions` ligado no `tsconfig.json`.
 
 ## Status
 
 - [x] Camada de domínio com testes
-- [ ] Casos de uso e ports (`application/`)
+- [x] Casos de uso e ports (`application/`)
 - [ ] Persistência SQLite
 - [ ] Telas: livro, cadastro por texto, revisão
 - [ ] Áudio, foto e OCR
