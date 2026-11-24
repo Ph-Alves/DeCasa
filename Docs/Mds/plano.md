@@ -22,7 +22,7 @@ src/
   app/            rotas Expo Router (finas)
   domain/         FEITO
   application/    FEITO: ports/, usecases/, intercambio/
-  adapters/       persistence/ (SQLite), native/, pdf/
+  adapters/       persistence/ FEITO; native/, pdf/
   presentation/   telas por funcionalidade + ui/ (tokens do moodboard)
   main/           composition root (injeção manual)
 ```
@@ -69,11 +69,21 @@ Diferenças em relação à arquitetura 2.2:
 
 Ainda não coberto: transcrever áudio escolhido de arquivo (RF06 cita "ou escolhido").
 
+## 3.2 Feito: `adapters/persistence/`
+
+- `banco.ts`: interface mínima `Banco` (o pedaço do `SQLiteDatabase` do expo-sqlite que os repositórios usam). Nos testes ela é implementada com `node:sqlite`, então o SQL roda de verdade no computador.
+- `migracoes.ts`: versões por `PRAGMA user_version`, cada uma numa transação; liga `foreign_keys`. A versão 1 cria as tabelas da seção 4 da arquitetura e o livro único (RN01). Ficou de fora `passo_ingrediente` (ver ponto 5 da seção 1). `midia` ganhou `ordem`.
+- `conexao.ts`: `abrirBanco()` abre `decasa.db`, liga WAL e migra. É o único arquivo que importa `expo-sqlite`.
+- Repositórios: `SqliteReceitaRepository` (salvar com UPSERT e filhos regravados numa transação; listar com 4 consultas no total), `SqliteRascunhoRepository` (JSON; ilegível vira null), `SqliteListaComprasRepository`, `SqliteLivroRepository`.
+- `persistence.test.ts`: 8 testes, incluindo cascata, rollback (RNF08) e o `SalvarReceitaRevisada` rodando sobre o SQLite.
+
+Não testado em aparelho: o `abrirBanco()` real (expo-sqlite precisa do app rodando).
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.
 2. **Regra de dependência no lint**: `npx expo lint` (instala o ESLint do Expo) + `no-restricted-imports` por pasta. Não precisa de plugin extra.
-3. **`adapters/persistence/`**: `expo-sqlite` com migrações, repositórios e mapeadores; transação em `salvar` (RNF08).
+3. ~~`adapters/persistence/`~~ feito.
 4. **`main/`**: composition root e contexto React.
 5. **Limpar o template** (abas, explore, `app-tabs.web.tsx`, que tem o único erro de `tsc` hoje) e criar os tokens do moodboard: cores Farinha `#FBF6EA`, Papel `#F1E3C4`, Café `#3B2A20`, Terracota `#A93F28`, Sálvia `#6F8561`, Mostarda `#D9A441`; fontes Fraunces, Caveat e Nunito. Conferir contraste 4,5:1 (RNF05), por exemplo Mostarda sobre Farinha provavelmente não passa.
 6. Telas na ordem da seção 10 da arquitetura: livro e cadastro por texto → áudio → foto/OCR/revisão → modo cozinha, escala, lista → exportar PDF → importar PDF → transcrição.

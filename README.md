@@ -106,7 +106,9 @@ src/
     ports/          interfaces: repositórios e plataforma (áudio, fala, OCR, PDF...)
     usecases/       um arquivo por caso de uso
     intercambio/    apêndice de dados do PDF (exportar e importar)
-  adapters/         SQLite, nativos, PDF            (a fazer)
+  adapters/
+    persistence/    SQLite: migrações e repositórios
+    native/, pdf/   áudio, fala, OCR, PDF            (a fazer)
   presentation/     telas e componentes             (a fazer)
   main/             composition root                (a fazer)
 ```
@@ -145,13 +147,15 @@ Domínio: leitura de quantidades e frações, escala de porções, consolidaçã
 
 Casos de uso: testados com implementações falsas (em memória) dos ports, sem aparelho. Cobrem salvar, editar e excluir, rascunho, busca, captura por voz e foto (inclusive sem permissão ou sem transcrição), lista de compras, ida e volta do apêndice do PDF (inclusive adulterado) e importação com duplicatas.
 
+Persistência: os repositórios SQLite rodam contra o SQLite embutido no Node (`node:sqlite`), com o mesmo SQL do app. Cobrem migrações, ida e volta de receita com todos os campos, edição sem sobras, exclusão em cascata, transação desfeita em caso de erro, rascunho e lista de compras.
+
 Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from '../texto.ts'`), com `allowImportingTsExtensions` ligado no `tsconfig.json`.
 
 ## Status
 
 - [x] Camada de domínio com testes
 - [x] Casos de uso e ports (`application/`)
-- [ ] Persistência SQLite
+- [x] Persistência SQLite
 - [ ] Telas: livro, cadastro por texto, revisão
 - [ ] Áudio, foto e OCR
 - [ ] Modo cozinha, escala e lista de compras
