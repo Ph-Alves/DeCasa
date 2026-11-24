@@ -47,6 +47,10 @@ export function TelaLivro() {
         )}
       </View>
 
+      <View style={estilos.linha}>
+        <Botao tipo="secundario" icone="cart" titulo="Lista de compras" aoTocar={() => router.push('/compras')} />
+      </View>
+
       {pendente && (
         <View style={{ gap: espaco[8] }}>
           <Aviso>Você começou a receita "{pendente.titulo.trim() || 'sem nome'}" e ainda não salvou no livro.</Aviso>

@@ -1,3 +1,4 @@
+import { chaveDaUnidade, unidadeConcordante } from '../receita/unidade.ts';
 import { normalizar } from '../texto.ts';
 
 export type ItemCompra = {
@@ -16,13 +17,14 @@ export type ItemCompra = {
 export function consolidarItens(itens: ItemCompra[]): ItemCompra[] {
   const porChave = new Map<string, ItemCompra>();
   for (const item of itens) {
-    const chave = `${normalizar(item.nome)}|${normalizar(item.unidade ?? '')}`;
+    const chave = `${normalizar(item.nome)}|${chaveDaUnidade(item.unidade)}`;
     const atual = porChave.get(chave);
     if (!atual) {
       porChave.set(chave, { ...item });
       continue;
     }
     if (item.quantidade !== null) atual.quantidade = (atual.quantidade ?? 0) + item.quantidade;
+    atual.unidade = unidadeConcordante(atual.unidade, atual.quantidade);
     atual.comprado = atual.comprado && item.comprado;
   }
   return [...porChave.values()];

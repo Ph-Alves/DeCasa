@@ -266,10 +266,16 @@ test('lista de compras: escala, consolida e compartilha (RF13)', async () => {
   assert.equal(lista.length, 2);
 
   lista = await app.compras.marcar(fuba!.id, true);
-  assert.equal(textoDaLista(lista), 'Lista de compras\n\n✓ 2 xícaras Fubá\n• sal');
+  assert.equal(textoDaLista(lista), 'Lista de compras\n\n✓ 2 xícaras de Fubá\n• sal');
   await app.compras.compartilhar();
   assert.equal(app.compartilhados.length, 1);
   assert.deepEqual(await app.compras.limpar(), []);
+
+  // Sem rendimento informado, a escala é "vezes a receita".
+  const semRendimento = await app.salvar.executar({ ...rascunhoValido('Pudim'), rendimentoPorcoes: null });
+  assert.ok(semRendimento.ok);
+  lista = await app.compras.adicionarReceita(semRendimento.receita, 3);
+  assert.equal(lista.find((i) => i.nome === 'fubá')?.quantidade, 6);
 });
 
 // ---------- Apêndice do PDF ----------

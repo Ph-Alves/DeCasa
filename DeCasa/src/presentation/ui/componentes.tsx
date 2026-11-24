@@ -47,12 +47,14 @@ type BotaoProps = {
   icone?: NomeDoIcone;
   tipo?: 'principal' | 'secundario' | 'perigo';
   desativado?: boolean;
+  /** Modo cozinha: 68 de altura e texto 20 (RF11). */
+  grande?: boolean;
   rotuloAcessivel?: string;
   estilo?: StyleProp<ViewStyle>;
 };
 
 /** Principal: pílula Terracota de 56. Secundário: contorno Café de 44. Perigo: texto Terracota (excluir). */
-export function Botao({ titulo, aoTocar, icone, tipo = 'principal', desativado, rotuloAcessivel, estilo }: BotaoProps) {
+export function Botao({ titulo, aoTocar, icone, tipo = 'principal', desativado, grande, rotuloAcessivel, estilo }: BotaoProps) {
   return (
     <Pressable
       onPress={aoTocar}
@@ -60,11 +62,11 @@ export function Botao({ titulo, aoTocar, icone, tipo = 'principal', desativado, 
       accessibilityRole="button"
       accessibilityLabel={rotuloAcessivel}
       accessibilityState={{ disabled: !!desativado }}
-      style={({ pressed }) => [estilos[tipo], desativado && { opacity: 0.35 }, pressed && { opacity: 0.8 }, estilo]}
+      style={({ pressed }) => [estilos[tipo], grande && estilos.grande, grande && tipo === 'secundario' && { borderWidth: 2 }, desativado && { opacity: 0.35 }, pressed && { opacity: 0.8 }, estilo]}
     >
       <View style={estilos.botaoConteudo}>
         {icone && <MaterialCommunityIcons name={icone} size={20} color={estilos[`${tipo}Texto`].color} />}
-        <Text style={estilos[`${tipo}Texto`]}>{titulo}</Text>
+        <Text style={[estilos[`${tipo}Texto`], grande && { fontSize: tamanhos.tituloS }]}>{titulo}</Text>
       </View>
     </Pressable>
   );
@@ -127,6 +129,7 @@ const estilos = StyleSheet.create({
   rotulo: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloS, color: cores.terracota },
   titulo: { fontFamily: fontes.titulo, fontSize: tamanhos.tituloM, color: cores.cafe },
 
+  grande: { minHeight: toque.cozinha, borderRadius: raios.pilula68 },
   botaoConteudo: { flexDirection: 'row', alignItems: 'center', gap: espaco[8] },
   principal: {
     minHeight: toque.acao, borderRadius: raios.pilula56, paddingHorizontal: espaco[22],

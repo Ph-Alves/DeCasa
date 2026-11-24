@@ -115,6 +115,15 @@ Limites: o tile não tem xadrez (precisa de SVG); player de áudio, escala, list
 
 Limites: sem a animação de ondas durante a gravação (e a versão estática para movimento reduzido).
 
+## 3.6 Feito: modo cozinha, escala e lista de compras (RF11 a RF13)
+
+- **Receita:** seletor de porções (− N +) que recalcula os ingredientes só na tela (RF12). Sem rendimento informado, vira "N× a receita" (base 1); a lista usa a mesma regra. "Cozinhar agora" é a ação principal; "Adicionar à lista de compras" leva os ingredientes na escala escolhida.
+- **Modo cozinha** (`/cozinha/[id]?porcoes=N`): tela acesa com `useKeepAwake` (desliga ao sair), Sair, barra em segmentos e "Passo N de M", passo em Fraunces 40 (cresce com a fonte do sistema), Voltar e Próximo de 68 pt, "Terminei" no último. Os ingredientes na escala abrem num botão, porque ainda não há chips por passo.
+- **Lista de compras** (`/compras`, botão no livro): marcar (checkbox de 48 pt), remover, adicionar item escrito ("1 kg de açúcar" vira quantidade, unidade e nome), limpar com confirmação e compartilhar como texto pela folha do sistema.
+- **Domínio:** `unidadeConcordante` ("2 xícaras", "3 colheres de sopa") usada pela escala e pela lista; `chaveDaUnidade` faz "xícara" e "xícaras" somarem (RN04). Resolve o limite anotado na etapa do domínio.
+- `compartilhadorDoSistema` (texto pelo `Share` do React Native; arquivo entra com o PDF).
+- Conferido no simulador com a lista montada pelo próprio `ListaDeCompras`: 1 xícara avulsa + 4 do bolo em dobro = "5 xícaras de fubá". **Não conferido:** tocar nos botões e a folha de compartilhamento.
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.

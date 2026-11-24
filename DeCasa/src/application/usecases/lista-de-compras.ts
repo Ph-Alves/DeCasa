@@ -19,11 +19,12 @@ export class ListaDeCompras {
     return this.d.itens.listar();
   }
 
-  /** Com a escala escolhida na tela (RF12), sem alterar a receita. */
+  /**
+   * Com a escala escolhida na tela (RF12), sem alterar a receita.
+   * Sem rendimento informado, `porcoes` é quantas vezes a receita (base 1).
+   */
   async adicionarReceita(receita: Receita, porcoes?: number): Promise<ItemCompra[]> {
-    const ingredientes = porcoes && receita.rendimentoPorcoes
-      ? escalar(receita.ingredientes, receita.rendimentoPorcoes, porcoes)
-      : receita.ingredientes;
+    const ingredientes = porcoes ? escalar(receita.ingredientes, receita.rendimentoPorcoes ?? 1, porcoes) : receita.ingredientes;
     const novos = ingredientes.map((i) => this.novoItem(i.nome, i.quantidade.valor, i.unidade, receita.id));
     return this.gravar([...(await this.listar()), ...novos]);
   }
@@ -62,9 +63,12 @@ export class ListaDeCompras {
 
 /** Texto para a folha de compartilhamento (WhatsApp, notas...). */
 export function textoDaLista(itens: ItemCompra[]): string {
-  const linhas = itens.map((i) => {
-    const quanto = [i.quantidade === null ? '' : formatarQuantidade(i.quantidade), i.unidade ?? ''].filter(Boolean).join(' ');
-    return `${i.comprado ? '✓' : '•'} ${quanto ? `${quanto} ` : ''}${i.nome}`;
-  });
-  return ['Lista de compras', '', ...linhas].join('\n');
+  return ['Lista de compras', '', ...itens.map((i) => `${i.comprado ? '✓' : '•'} ${textoDoItem(i)}`)].join('\n');
+}
+
+/** "2 xícaras de fubá", "3 ovos", "sal". */
+export function textoDoItem(i: ItemCompra): string {
+  const numero = i.quantidade === null ? '' : formatarQuantidade(i.quantidade);
+  if (i.unidade) return `${[numero, i.unidade].filter(Boolean).join(' ')} de ${i.nome}`;
+  return numero ? `${numero} ${i.nome}` : i.nome;
 }

@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { escalar } from '../../domain/porcoes/escalar.ts';
 import { receitaParaRascunho, type Receita } from '../../domain/receita/receita.ts';
 import { textoDoIngrediente } from '../../domain/parser/texto-para-receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
@@ -9,22 +10,33 @@ import { Botao, Cabecalho, Tela } from '../ui/componentes.tsx';
 import { PlayerDeAudio } from '../ui/player-audio.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos } from '../ui/tokens.ts';
 import { abrirRevisao, perguntar } from './abrir-revisao.ts';
+import { SeletorDePorcoes } from './seletor-de-porcoes.tsx';
 
 const PAUTA = 40;
 
-/**
- * RF09 e RF10. shortcut: escala de porções, lista de compras e modo cozinha
- * entram na etapa de cozinha.
- */
+/** RF09, RF10, RF12 e RF13. */
 export function TelaReceita({ id }: { id: string }) {
-  const { consultar, rascunho, excluir, uriDaMidia } = useDependencias();
+  const { consultar, rascunho, excluir, compras, uriDaMidia } = useDependencias();
   const [receita, setReceita] = useState<Receita | null | undefined>(undefined);
+  const [porcoes, setPorcoes] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
-      consultar.ver(id).then(setReceita);
+      consultar.ver(id).then((r) => {
+        setReceita(r);
+        setPorcoes(r?.rendimentoPorcoes ?? 1);
+      });
     }, [consultar, id]),
   );
+
+  async function adicionarNaLista() {
+    if (!receita) return;
+    await compras.adicionarReceita(receita, porcoes);
+    const escolha = await perguntar('Na lista de compras', `Os ingredientes de "${receita.titulo}" foram para a lista.`, [
+      { texto: 'Ver lista' }, { texto: 'Ok', estilo: 'cancel' },
+    ]);
+    if (escolha === 0) router.push('/compras');
+  }
 
   async function confirmarExclusao() {
     if (!receita) return;
@@ -48,21 +60,23 @@ export function TelaReceita({ id }: { id: string }) {
   }
 
   const audio = receita.midias.find((m) => m.tipo === 'audio');
+  const base = receita.rendimentoPorcoes ?? 1;
+  const ingredientes = escalar(receita.ingredientes, base, porcoes);
   return (
-    <Tela>
+    <Tela acao={<Botao icone="pot-steam" titulo="Cozinhar agora" aoTocar={() => router.push(`/cozinha/${receita.id}?porcoes=${porcoes}`)} />}>
       <Cabecalho titulo="" />
       <View style={estilos.capa}>
         <Text style={estilos.rotulo}>receita da família</Text>
         <Text style={estilos.titulo} accessibilityRole="header">{receita.titulo}</Text>
         {receita.autorNome && <Text style={estilos.autor}>por <Text style={estilos.autorNome}>{receita.autorNome}</Text></Text>}
-        {receita.rendimentoPorcoes && <Text style={estilos.autor}>Rende {receita.rendimentoPorcoes} porções</Text>}
       </View>
 
       {audio && <PlayerDeAudio uri={uriDaMidia(audio.caminhoLocal)} titulo="Ouvir o áudio da vó" />}
 
       <Text style={estilos.secao} accessibilityRole="header">Ingredientes</Text>
+      <SeletorDePorcoes valor={porcoes} aoMudar={setPorcoes} temRendimento={receita.rendimentoPorcoes !== null} />
       <View style={estilos.caderno}>
-        {receita.ingredientes.map((i) => (
+        {ingredientes.map((i) => (
           <Text key={i.id} style={estilos.pauta}>{textoDoIngrediente(i)}</Text>
         ))}
       </View>
@@ -81,6 +95,7 @@ export function TelaReceita({ id }: { id: string }) {
       {receita.quandoFaz && <Observacao titulo="Quando faz" texto={receita.quandoFaz} />}
 
       <View style={estilos.acoes}>
+        <Botao tipo="secundario" icone="cart-plus" titulo="Adicionar à lista de compras" aoTocar={adicionarNaLista} />
         <Botao tipo="secundario" titulo="Editar receita" aoTocar={() => abrirRevisao(rascunho, receitaParaRascunho(receita))} />
         <Botao tipo="perigo" titulo="Excluir receita" aoTocar={confirmarExclusao} />
       </View>

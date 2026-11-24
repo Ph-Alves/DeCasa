@@ -116,6 +116,8 @@ src/
     livro/          livro com grade, busca e rascunho pendente
     receita/        nova receita (voz e texto), revisar, ver, editar e excluir
     captura/        gravador de voz
+    cozinha/        modo cozinha
+    compras/        lista de compras
   main/             composition root: abre o banco e entrega os casos de uso às telas
 ```
 
@@ -166,7 +168,7 @@ Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from 
 - [x] Telas: livro, cadastro por texto, revisão, ver, editar e excluir
 - [x] Áudio: gravar, ouvir, regravar, descartar e player na receita
 - [ ] Foto e OCR
-- [ ] Modo cozinha, escala e lista de compras
+- [x] Modo cozinha, escala de porções e lista de compras
 - [ ] Exportar e importar PDF
 - [ ] Transcrição automática
 
