@@ -41,6 +41,7 @@ export type Receita = {
 
 /** Receita em revisão (RF08): ainda sem ids nem datas. Só vira Receita ao salvar (RN02). */
 export type Rascunho = {
+  receitaId: string | null; // preenchido quando é a edição de uma receita salva (RF10)
   titulo: string;
   autorNome: string | null;
   rendimentoPorcoes: number | null;
@@ -59,8 +60,19 @@ export const NOME_PADRAO_DO_LIVRO = 'Livro da Família';
 
 export function rascunhoVazio(origem: Origem): Rascunho {
   return {
-    titulo: '', autorNome: null, rendimentoPorcoes: null, pontoObs: null, quandoFaz: null,
+    receitaId: null, titulo: '', autorNome: null, rendimentoPorcoes: null, pontoObs: null, quandoFaz: null,
     origem, ingredientes: [], passos: [], naoClassificado: [], midias: [],
+  };
+}
+
+/** RF10: editar reabre a revisão com os dados atuais. */
+export function receitaParaRascunho(r: Receita): Rascunho {
+  return {
+    receitaId: r.id, titulo: r.titulo, autorNome: r.autorNome, rendimentoPorcoes: r.rendimentoPorcoes,
+    pontoObs: r.pontoObs, quandoFaz: r.quandoFaz, origem: r.origem,
+    ingredientes: r.ingredientes.map(({ id: _id, ...i }) => i),
+    passos: r.passos.map((p) => p.texto),
+    naoClassificado: [], midias: r.midias,
   };
 }
 

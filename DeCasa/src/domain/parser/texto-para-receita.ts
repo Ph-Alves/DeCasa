@@ -1,6 +1,6 @@
 import { normalizar } from '../texto.ts';
 import { lerQuantidade, SEM_QUANTIDADE, type Quantidade } from '../receita/quantidade.ts';
-import type { Ingrediente } from '../receita/receita.ts';
+import { rascunhoVazio, type Ingrediente, type Midia, type Origem, type Rascunho } from '../receita/receita.ts';
 
 /** Saída do parser: vira parte de um Rascunho, que o usuário revisa antes de salvar (RN02). */
 export type ReceitaExtraida = {
@@ -111,4 +111,9 @@ export function textoParaReceita(texto: string): ReceitaExtraida {
   }
 
   return saida;
+}
+
+/** Texto capturado (voz, foto, PDF) já separado num rascunho para a revisão. */
+export function rascunhoDoTexto(texto: string, origem: Origem, midias: Midia[] = []): Rascunho {
+  return { ...rascunhoVazio(origem), ...textoParaReceita(texto), midias };
 }
