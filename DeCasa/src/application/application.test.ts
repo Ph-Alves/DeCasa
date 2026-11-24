@@ -38,6 +38,7 @@ function montar() {
   const midias = {
     guardar: async (uri: string) => ({ caminhoLocal: `app/${uri}`, tamanhoBytes: 100 }),
     apagar: async (caminho: string) => void apagados.push(caminho),
+    uri: (caminho: string) => `file:///${caminho}`,
     espacoUsado: async () => 0,
   };
   const ids = { novo: () => `id${++seq}` };
@@ -56,7 +57,7 @@ function montar() {
     banco, apagados, compartilhados, negadas, pdfs, livro, fala, ocr, pdf, salvar,
     get rascunhoGuardado() { return rascunhoGuardado; },
     get lista() { return lista; },
-    consultar: new ConsultarReceitas({ receitas }),
+    consultar: new ConsultarReceitas({ receitas, livro: { obter: async () => livro, renomear: async () => {} } }),
     excluir: new ExcluirReceita({ receitas, midias }),
     rascunho: new GerenciarRascunho({
       receitas, midias,

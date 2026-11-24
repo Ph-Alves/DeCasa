@@ -157,7 +157,7 @@ test('caso de uso real sobre o SQLite: SalvarReceitaRevisada grava e edita', asy
   let n = 0;
   const salvar = new SalvarReceitaRevisada({
     receitas,
-    midias: { guardar: async () => ({ caminhoLocal: '', tamanhoBytes: 0 }), apagar: async () => {}, espacoUsado: async () => 0 },
+    midias: { guardar: async () => ({ caminhoLocal: '', tamanhoBytes: 0 }), apagar: async () => {}, uri: (c: string) => c, espacoUsado: async () => 0 },
     ids: { novo: () => `id${++n}` },
     relogio: { agora: () => new Date(1_700_000_000_000 + n) },
   });

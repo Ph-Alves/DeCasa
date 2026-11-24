@@ -51,8 +51,13 @@ export interface SeletorDeArquivo {
 
 /** Arquivos de áudio e foto na área privada do app (RN05, RNF09). */
 export interface MidiaStorage {
-  /** Copia um arquivo temporário (gravação, câmera, galeria) para o armazenamento do app. */
+  /**
+   * Copia um arquivo temporário (gravação, câmera, galeria) para o armazenamento do app.
+   * `caminhoLocal` é relativo à pasta do app: no iOS o caminho absoluto muda quando o app é atualizado.
+   */
   guardar(uriTemporaria: string, tipo: Midia['tipo']): Promise<{ caminhoLocal: string; tamanhoBytes: number }>;
+  /** Caminho absoluto (file://) para tocar, mostrar ou mandar para OCR e transcrição. */
+  uri(caminhoLocal: string): string;
   apagar(caminhoLocal: string): Promise<void>;
   /** Bytes ocupados por áudios e fotos (RNF10). */
   espacoUsado(): Promise<number>;

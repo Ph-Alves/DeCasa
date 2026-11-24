@@ -28,7 +28,7 @@ export class CapturarPorFoto {
 
     let texto: string;
     try {
-      texto = (await this.d.ocr.recognize(caminhoLocal)).text;
+      texto = (await this.d.ocr.recognize(this.d.midias.uri(caminhoLocal))).text;
     } catch {
       return soFoto('falhou');
     }

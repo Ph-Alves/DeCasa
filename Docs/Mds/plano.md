@@ -79,12 +79,23 @@ Ainda não coberto: transcrever áudio escolhido de arquivo (RF06 cita "ou escol
 
 Não testado em aparelho: o `abrirBanco()` real (expo-sqlite precisa do app rodando).
 
+## 3.3 Feito: composition root, tokens e limpeza do template
+
+- `main/dependencias.ts` cria adapters e casos de uso (injeção manual, D10); `main/provedor.tsx` abre o banco, segura a splash até ficar pronto e entrega os casos de uso por contexto (`useDependencias`). Se o banco não abrir, mostra mensagem em vez de tela branca.
+- Ligados por enquanto: consultar, salvar, rascunho, excluir. Captura, lista de compras e PDF entram com os adapters de cada um.
+- `adapters/native/`: `ExpoMidiaStorage` (expo-file-system, pasta `documentos/midias/`) e ids UUID (`expo-crypto`). **`caminhoLocal` é relativo** (`midias/<uuid>.m4a`): no iOS o caminho absoluto muda a cada atualização do app. Por isso o port `MidiaStorage` ganhou `uri()`, usado por voz e foto antes da transcrição e do OCR.
+- `presentation/ui/tokens.ts`: tokens da página 7 do design system, já com a borda de controle corrigida (`#9A8456`).
+- Fontes por peso (`@expo-google-fonts/<familia>/<peso>`): só os 7 arquivos usados entram no app.
+- Template do Expo removido (abas, explore, componentes, hooks, imagens, `reset-project`). `tsc` sem erros. `app.json`: nome "De Casa", tema claro, splash Farinha.
+- `ConsultarReceitas.livro()` para o nome no cabeçalho.
+- Conferido no simulador iOS (Expo Go): tela do livro com as fontes e o nome vindo do SQLite.
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.
 2. **Regra de dependência no lint**: `npx expo lint` (instala o ESLint do Expo) + `no-restricted-imports` por pasta. Não precisa de plugin extra.
 3. ~~`adapters/persistence/`~~ feito.
 4. **`main/`**: composition root e contexto React.
-5. **Limpar o template** (abas, explore, `app-tabs.web.tsx`, que tem o único erro de `tsc` hoje) e criar os tokens do moodboard: cores Farinha `#FBF6EA`, Papel `#F1E3C4`, Café `#3B2A20`, Terracota `#A93F28`, Sálvia `#6F8561`, Mostarda `#D9A441`; fontes Fraunces, Caveat e Nunito. Conferir contraste 4,5:1 (RNF05), por exemplo Mostarda sobre Farinha provavelmente não passa.
+5. ~~Limpar o template e criar os tokens~~ feito. Era: tokens do moodboard: cores Farinha `#FBF6EA`, Papel `#F1E3C4`, Café `#3B2A20`, Terracota `#A93F28`, Sálvia `#6F8561`, Mostarda `#D9A441`; fontes Fraunces, Caveat e Nunito. Conferir contraste 4,5:1 (RNF05), por exemplo Mostarda sobre Farinha provavelmente não passa.
 6. Telas na ordem da seção 10 da arquitetura: livro e cadastro por texto → áudio → foto/OCR/revisão → modo cozinha, escala, lista → exportar PDF → importar PDF → transcrição.
 7. **Dev build** a partir da etapa de áudio (módulos nativos não rodam no Expo Go). Spikes S1, S2 e S4 em aparelho real antes de fechar as bibliotecas.

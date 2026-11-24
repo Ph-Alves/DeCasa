@@ -54,7 +54,7 @@ export class CapturarPorVoz {
     if ((await this.d.permissoes.solicitar('fala')) === 'negada') return soAudio('sem-permissao');
     if (!(await this.d.fala.isAvailable('pt-BR'))) return soAudio('indisponivel');
     try {
-      const texto = await this.d.fala.transcribe(audio.caminhoLocal, opts);
+      const texto = await this.d.fala.transcribe(this.d.midias.uri(audio.caminhoLocal), opts);
       return { rascunho: rascunhoDoTexto(texto, 'voz', [{ ...audio, transcricao: texto }]), problema: null };
     } catch {
       return soAudio(opts.signal?.aborted ? 'cancelada' : 'falhou');

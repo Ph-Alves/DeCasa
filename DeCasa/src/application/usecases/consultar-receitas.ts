@@ -1,12 +1,19 @@
-import { correspondeBusca, type Receita } from '../../domain/receita/receita.ts';
-import type { ReceitaRepository } from '../ports/repositorios.ts';
+import { correspondeBusca, type Livro, type Receita } from '../../domain/receita/receita.ts';
+import type { LivroRepository, ReceitaRepository } from '../ports/repositorios.ts';
 
 /** RF01, RF02, RF09. */
 export class ConsultarReceitas {
   private readonly receitas: ReceitaRepository;
+  private readonly livros: LivroRepository;
 
-  constructor(deps: { receitas: ReceitaRepository }) {
+  constructor(deps: { receitas: ReceitaRepository; livro: LivroRepository }) {
     this.receitas = deps.receitas;
+    this.livros = deps.livro;
+  }
+
+  /** Nome do livro para o cabeçalho (RN01). */
+  livro(): Promise<Livro> {
+    return this.livros.obter();
   }
 
   /** Mais recentes primeiro. */

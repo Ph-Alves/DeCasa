@@ -108,9 +108,12 @@ src/
     intercambio/    apêndice de dados do PDF (exportar e importar)
   adapters/
     persistence/    SQLite: migrações e repositórios
-    native/, pdf/   áudio, fala, OCR, PDF            (a fazer)
-  presentation/     telas e componentes             (a fazer)
-  main/             composition root                (a fazer)
+    native/         mídia (expo-file-system), ids, relógio; áudio, fala e OCR a fazer
+    pdf/            gerador de PDF                   (a fazer)
+  presentation/
+    ui/tokens.ts    cores, fontes, medidas e sombras do design system
+    livro/          tela do livro
+  main/             composition root: abre o banco e entrega os casos de uso às telas
 ```
 
 ## Como rodar
@@ -156,6 +159,7 @@ Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from 
 - [x] Camada de domínio com testes
 - [x] Casos de uso e ports (`application/`)
 - [x] Persistência SQLite
+- [x] Composition root, tokens do design system e fontes
 - [ ] Telas: livro, cadastro por texto, revisão
 - [ ] Áudio, foto e OCR
 - [ ] Modo cozinha, escala e lista de compras
