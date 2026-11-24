@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -35,7 +36,7 @@ export function TelaLivro() {
   const total = receitas?.length ?? 0;
 
   return (
-    <Tela acao={<Botao titulo="＋  Nova receita" aoTocar={() => router.push('/nova')} />}>
+    <Tela acao={<Botao icone="plus" titulo="Nova receita" aoTocar={() => router.push('/nova')} />}>
       <View>
         <Text style={estilos.rotulo}>De Casa, o caderninho da família</Text>
         <Text style={estilos.titulo} accessibilityRole="header">{nome}</Text>
@@ -104,7 +105,12 @@ function CardDeReceita({ receita }: { receita: Receita }) {
         <View style={estilos.inicial}>
           <Text style={estilos.inicialTexto}>{receita.titulo.trim().charAt(0).toUpperCase()}</Text>
         </View>
-        {temAudio && <Text style={estilos.tagAudio}>🎙 áudio da vó</Text>}
+        {temAudio && (
+          <View style={estilos.tagAudio}>
+            <MaterialCommunityIcons name="microphone" size={12} color={cores.terracota} />
+            <Text style={estilos.tagAudioTexto}>áudio da vó</Text>
+          </View>
+        )}
       </View>
       <View style={estilos.cardTexto}>
         <Text style={estilos.cardTitulo} numberOfLines={2}>{receita.titulo}</Text>
@@ -141,10 +147,10 @@ const estilos = StyleSheet.create({
   },
   inicialTexto: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloL, color: cores.cafe },
   tagAudio: {
-    position: 'absolute', left: espaco[8], bottom: espaco[8], backgroundColor: cores.farinha,
-    borderRadius: raios.campo, paddingHorizontal: espaco[8], paddingVertical: espaco[2],
-    fontFamily: fontes.corpoNegrito, fontSize: tamanhos.legenda, color: cores.cafe, overflow: 'hidden',
+    position: 'absolute', left: espaco[8], bottom: espaco[8], flexDirection: 'row', alignItems: 'center', gap: espaco[4],
+    backgroundColor: cores.farinha, borderRadius: raios.campo, paddingHorizontal: espaco[8], paddingVertical: espaco[2],
   },
+  tagAudioTexto: { fontFamily: fontes.corpoNegrito, fontSize: tamanhos.legenda, color: cores.cafe },
   cardTexto: { padding: espaco[12], gap: espaco[2] },
   cardTitulo: { fontFamily: fontes.titulo, fontSize: tamanhos.corpo + 1, color: cores.cafe },
   cardAutor: { fontFamily: fontes.corpo, fontSize: tamanhos.legenda, color: cores.cafeSuave },

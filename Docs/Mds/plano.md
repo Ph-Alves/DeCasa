@@ -102,6 +102,19 @@ Não testado em aparelho: o `abrirBanco()` real (expo-sqlite precisa do app roda
 
 Limites: o tile não tem xadrez (precisa de SVG); player de áudio, escala, lista e modo cozinha entram nas próximas etapas.
 
+## 3.5 Feito: áudio (RF04, RF09, RF17, RNF10)
+
+- **Nova receita** com abas Voz (padrão) e Texto: do livro até gravar são 2 toques (RF04, RNF06). Círculo de 120 Terracota/Café, tempo decorrido, ouvir antes de continuar, gravar de novo e descartar.
+- **Permissão** de microfone só ao tocar em gravar, com texto em português no `app.json`; negada, a tela oferece abrir os ajustes ou escrever a receita (RF17).
+- **Revisão** mostra o player para ouvir enquanto escreve; **receita** mostra "Ouvir o áudio da vó" (tocar, pausar, progresso, tempo atual e total).
+- `ExpoAudioRecorder`: AAC mono 64 kbps (RNF10). O expo-audio só cria o gravador pelo hook `useAudioRecorder`, então a tela cria o gravador e o composition root monta o `CapturarPorVoz` com ele (`deps.capturaPorVoz(gravador)`).
+- `semTranscricao`: o `SpeechEngine` responde "indisponível" até a etapa de transcrição; a revisão abre vazia, com o áudio e um aviso. O `CapturarPorVoz` agora checa a disponibilidade antes de pedir permissão de fala.
+- Nada fica órfão: sair da nova receita com gravação descarta o arquivo; se a pessoa escolher continuar o rascunho anterior, a gravação nova continua na tela.
+- Ícones com `@expo/vector-icons` (Material Community) no lugar de caracteres e emoji.
+- Conferido no simulador: abas, botão de gravar e player tocando um arquivo real em `midias/` (o caminho relativo resolve certo). **Não conferido:** gravar de verdade e o alerta de permissão (não dá para tocar no simulador daqui).
+
+Limites: sem a animação de ondas durante a gravação (e a versão estática para movimento reduzido).
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.

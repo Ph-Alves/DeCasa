@@ -6,17 +6,18 @@ import { receitaParaRascunho, type Receita } from '../../domain/receita/receita.
 import { textoDoIngrediente } from '../../domain/parser/texto-para-receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
 import { Botao, Cabecalho, Tela } from '../ui/componentes.tsx';
+import { PlayerDeAudio } from '../ui/player-audio.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos } from '../ui/tokens.ts';
 import { abrirRevisao, perguntar } from './abrir-revisao.ts';
 
 const PAUTA = 40;
 
 /**
- * RF09 e RF10. shortcut: player de áudio, escala de porções, lista de compras e modo cozinha
- * entram nas etapas de captura e de cozinha.
+ * RF09 e RF10. shortcut: escala de porções, lista de compras e modo cozinha
+ * entram na etapa de cozinha.
  */
 export function TelaReceita({ id }: { id: string }) {
-  const { consultar, rascunho, excluir } = useDependencias();
+  const { consultar, rascunho, excluir, uriDaMidia } = useDependencias();
   const [receita, setReceita] = useState<Receita | null | undefined>(undefined);
 
   useFocusEffect(
@@ -46,6 +47,7 @@ export function TelaReceita({ id }: { id: string }) {
     );
   }
 
+  const audio = receita.midias.find((m) => m.tipo === 'audio');
   return (
     <Tela>
       <Cabecalho titulo="" />
@@ -55,6 +57,8 @@ export function TelaReceita({ id }: { id: string }) {
         {receita.autorNome && <Text style={estilos.autor}>por <Text style={estilos.autorNome}>{receita.autorNome}</Text></Text>}
         {receita.rendimentoPorcoes && <Text style={estilos.autor}>Rende {receita.rendimentoPorcoes} porções</Text>}
       </View>
+
+      {audio && <PlayerDeAudio uri={uriDaMidia(audio.caminhoLocal)} titulo="Ouvir o áudio da vó" />}
 
       <Text style={estilos.secao} accessibilityRole="header">Ingredientes</Text>
       <View style={estilos.caderno}>

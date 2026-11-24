@@ -51,8 +51,9 @@ export class CapturarPorVoz {
   ): Promise<{ rascunho: Rascunho; problema: ProblemaNaTranscricao | null }> {
     const soAudio = (problema: ProblemaNaTranscricao) => ({ rascunho: { ...rascunhoVazio('voz'), midias: [audio] }, problema });
 
-    if ((await this.d.permissoes.solicitar('fala')) === 'negada') return soAudio('sem-permissao');
+    // Primeiro ver se há transcrição: não pedir permissão de fala para um recurso que não existe no aparelho.
     if (!(await this.d.fala.isAvailable('pt-BR'))) return soAudio('indisponivel');
+    if ((await this.d.permissoes.solicitar('fala')) === 'negada') return soAudio('sem-permissao');
     try {
       const texto = await this.d.fala.transcribe(this.d.midias.uri(audio.caminhoLocal), opts);
       return { rascunho: rascunhoDoTexto(texto, 'voz', [{ ...audio, transcricao: texto }]), problema: null };

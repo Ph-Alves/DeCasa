@@ -6,6 +6,7 @@ import { ingredienteDaLinha, textoDoIngrediente } from '../../domain/parser/text
 import type { Rascunho } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
 import { Aviso, Botao, Cabecalho, Campo, Tela } from '../ui/componentes.tsx';
+import { formatarTempo, PlayerDeAudio } from '../ui/player-audio.tsx';
 import { cores, espaco, fontes, tamanhos } from '../ui/tokens.ts';
 import { perguntar } from './abrir-revisao.ts';
 
@@ -46,7 +47,7 @@ function paraRascunho(base: Rascunho, f: Formulario): Rascunho {
 
 /** RF08: conferir e corrigir antes de "Salvar no livro". Nada é gravado antes disso (RN02). */
 export function TelaRevisar() {
-  const { rascunho, salvar } = useDependencias();
+  const { rascunho, salvar, uriDaMidia } = useDependencias();
   const [base, setBase] = useState<Rascunho | null>(null);
   const [form, setForm] = useState<Formulario | null>(null);
   const [erros, setErros] = useState<string[]>([]);
@@ -101,16 +102,28 @@ export function TelaRevisar() {
   }
 
   if (!form) return null;
+  const audio = base?.midias.find((m) => m.tipo === 'audio');
   const mudar = (campo: keyof Formulario) => (valor: string) => setForm({ ...form, [campo]: valor });
 
   return (
-    <Tela acao={<Botao titulo="✓  Salvar no livro" aoTocar={salvarNoLivro} desativado={salvando} />}>
+    <Tela acao={<Botao icone="check" titulo="Salvar no livro" aoTocar={salvarNoLivro} desativado={salvando} />}>
       {/* O gesto de arrastar para voltar pularia a pergunta de sair. */}
       <Stack.Screen options={{ gestureEnabled: false }} />
       <Cabecalho titulo={base?.receitaId ? 'Editar receita' : 'Revisar receita'} aoVoltar={sair} />
 
-      {base?.origem !== 'texto' && !base?.receitaId && (
-        <Aviso>Confira se está igual ao original e corrija o que precisar. Nada vai para o livro antes de você salvar.</Aviso>
+      {audio && (
+        <PlayerDeAudio
+          uri={uriDaMidia(audio.caminhoLocal)}
+          titulo={`Áudio da vó anexado${audio.duracaoS ? ` · ${formatarTempo(audio.duracaoS)}` : ''}`}
+        />
+      )}
+
+      {audio && !audio.transcricao && !base?.receitaId ? (
+        <Aviso>Ouça a gravação e escreva os ingredientes e o passo a passo. O áudio fica guardado junto da receita. A transcrição automática ainda não está disponível.</Aviso>
+      ) : (
+        base?.origem !== 'texto' && !base?.receitaId && (
+          <Aviso>Confira se está igual ao original e corrija o que precisar. Nada vai para o livro antes de você salvar.</Aviso>
+        )
       )}
 
       {erros.length > 0 && (

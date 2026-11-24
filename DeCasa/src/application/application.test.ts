@@ -222,6 +222,10 @@ test('voz: o áudio fica no rascunho quando não dá para transcrever (RF06)', a
   assert.deepEqual(r.rascunho.midias, [gravado]);
 
   app.fala.disponivel = true;
+  app.negadas.add('fala');
+  assert.equal((await app.voz.transcrever(gravado)).problema, 'sem-permissao');
+  app.negadas.delete('fala');
+
   app.fala.texto = new Error('motor caiu');
   assert.equal((await app.voz.transcrever(gravado)).problema, 'falhou');
 

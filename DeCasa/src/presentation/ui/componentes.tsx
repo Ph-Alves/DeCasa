@@ -1,5 +1,6 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import {
   Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type ViewStyle,
@@ -7,6 +8,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from './tokens.ts';
+
+export type NomeDoIcone = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 /** Fundo Farinha, margem de 24 e ação principal fixa embaixo (uma por tela). */
 export function Tela({ children, acao }: { children: ReactNode; acao?: ReactNode }) {
@@ -28,7 +31,7 @@ export function Cabecalho({ titulo, rotulo, aoVoltar = () => router.back() }: { 
   return (
     <View style={estilos.cabecalho}>
       <Pressable onPress={aoVoltar} style={estilos.voltar} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>
-        <Text style={estilos.voltarIcone}>←</Text>
+        <MaterialCommunityIcons name="arrow-left" size={22} color={cores.cafe} />
       </Pressable>
       <View style={{ flex: 1 }}>
         {rotulo && <Text style={estilos.rotulo}>{rotulo}</Text>}
@@ -41,6 +44,7 @@ export function Cabecalho({ titulo, rotulo, aoVoltar = () => router.back() }: { 
 type BotaoProps = {
   titulo: string;
   aoTocar: () => void;
+  icone?: NomeDoIcone;
   tipo?: 'principal' | 'secundario' | 'perigo';
   desativado?: boolean;
   rotuloAcessivel?: string;
@@ -48,7 +52,7 @@ type BotaoProps = {
 };
 
 /** Principal: pílula Terracota de 56. Secundário: contorno Café de 44. Perigo: texto Terracota (excluir). */
-export function Botao({ titulo, aoTocar, tipo = 'principal', desativado, rotuloAcessivel, estilo }: BotaoProps) {
+export function Botao({ titulo, aoTocar, icone, tipo = 'principal', desativado, rotuloAcessivel, estilo }: BotaoProps) {
   return (
     <Pressable
       onPress={aoTocar}
@@ -58,7 +62,10 @@ export function Botao({ titulo, aoTocar, tipo = 'principal', desativado, rotuloA
       accessibilityState={{ disabled: !!desativado }}
       style={({ pressed }) => [estilos[tipo], desativado && { opacity: 0.35 }, pressed && { opacity: 0.8 }, estilo]}
     >
-      <Text style={estilos[`${tipo}Texto`]}>{titulo}</Text>
+      <View style={estilos.botaoConteudo}>
+        {icone && <MaterialCommunityIcons name={icone} size={20} color={estilos[`${tipo}Texto`].color} />}
+        <Text style={estilos[`${tipo}Texto`]}>{titulo}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -73,6 +80,28 @@ export function Campo({ rotulo, ...props }: { rotulo: string } & TextInputProps)
         {...props}
         style={[estilos.campo, props.multiline && estilos.campoLongo, props.style]}
       />
+    </View>
+  );
+}
+
+/** Pílulas de escolha (Voz, Foto, Texto). Estado também no peso e no fundo, não só na cor. */
+export function Abas<T extends string>({ opcoes, valor, aoMudar }: { opcoes: { valor: T; titulo: string }[]; valor: T; aoMudar: (v: T) => void }) {
+  return (
+    <View style={estilos.abas} accessibilityRole="tablist">
+      {opcoes.map((o) => {
+        const ativa = o.valor === valor;
+        return (
+          <Pressable
+            key={o.valor}
+            onPress={() => aoMudar(o.valor)}
+            style={[estilos.aba, ativa && estilos.abaAtiva]}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: ativa }}
+          >
+            <Text style={[estilos.abaTexto, ativa && { color: cores.cartao }]}>{o.titulo}</Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -95,10 +124,10 @@ const estilos = StyleSheet.create({
     width: toque.minimo, height: toque.minimo, borderRadius: toque.minimo / 2,
     backgroundColor: cores.papel, alignItems: 'center', justifyContent: 'center',
   },
-  voltarIcone: { fontFamily: fontes.corpoForte, fontSize: tamanhos.tituloS, color: cores.cafe },
   rotulo: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloS, color: cores.terracota },
   titulo: { fontFamily: fontes.titulo, fontSize: tamanhos.tituloM, color: cores.cafe },
 
+  botaoConteudo: { flexDirection: 'row', alignItems: 'center', gap: espaco[8] },
   principal: {
     minHeight: toque.acao, borderRadius: raios.pilula56, paddingHorizontal: espaco[22],
     backgroundColor: cores.terracota, alignItems: 'center', justifyContent: 'center', ...sombras.acao,
@@ -119,6 +148,14 @@ const estilos = StyleSheet.create({
     fontFamily: fontes.corpo, fontSize: tamanhos.corpo, color: cores.cafe,
   },
   campoLongo: { minHeight: 140, lineHeight: 24, textAlignVertical: 'top' },
+
+  abas: { flexDirection: 'row', gap: espaco[8] },
+  aba: {
+    flex: 1, minHeight: toque.minimo, borderRadius: raios.pilula44, borderWidth: 1.5, borderColor: cores.bordaControle,
+    backgroundColor: cores.cartao, alignItems: 'center', justifyContent: 'center',
+  },
+  abaAtiva: { backgroundColor: cores.terracota, borderColor: cores.terracota },
+  abaTexto: { fontFamily: fontes.corpoForte, fontSize: 15, color: cores.cafe },
 
   aviso: { backgroundColor: cores.mostardaClara, borderRadius: raios.aviso, padding: espaco[14] },
   avisoTexto: { fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, lineHeight: 21, color: cores.cafe },
