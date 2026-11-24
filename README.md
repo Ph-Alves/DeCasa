@@ -109,7 +109,7 @@ src/
   adapters/
     persistence/    SQLite: migrações e repositórios
     native/         mídia, gravação (expo-audio), permissões, ids, relógio; fala e OCR a fazer
-    pdf/            gerador de PDF                   (a fazer)
+    pdf/            modelo HTML do livro e gerador (expo-print)
   presentation/
     ui/tokens.ts    cores, fontes, medidas e sombras do design system
     ui/componentes  Tela, Cabeçalho, Botão, Campo, Aviso
@@ -118,6 +118,7 @@ src/
     captura/        gravador de voz
     cozinha/        modo cozinha
     compras/        lista de compras
+    pdf/            exportar livro
   main/             composition root: abre o banco e entrega os casos de uso às telas
 ```
 
@@ -169,7 +170,8 @@ Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from 
 - [x] Áudio: gravar, ouvir, regravar, descartar e player na receita
 - [ ] Foto e OCR
 - [x] Modo cozinha, escala de porções e lista de compras
-- [ ] Exportar e importar PDF
+- [x] Exportar PDF
+- [ ] Importar PDF
 - [ ] Transcrição automática
 
 ## Fluxo de branches

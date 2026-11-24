@@ -124,6 +124,17 @@ Limites: sem a animação de ondas durante a gravação (e a versão estática p
 - `compartilhadorDoSistema` (texto pelo `Share` do React Native; arquivo entra com o PDF).
 - Conferido no simulador com a lista montada pelo próprio `ListaDeCompras`: 1 xícara avulsa + 4 do bolo em dobro = "5 xícaras de fubá". **Não conferido:** tocar nos botões e a folha de compartilhamento.
 
+## 3.7 Feito: exportar PDF (RF14, RNF13)
+
+- **Tela "Exportar livro"** (`/exportar`, botão no livro): capa como no protótipo, nome editável (fica salvo no livro), incluir fotos, escolher receitas (todas por padrão). Gerar → Compartilhar (folha do sistema) ou Imprimir.
+- `adapters/pdf/modelo-html.ts`: função pura com capa, uma receita por página, ingredientes, passos, ponto da massa e o apêndice "Dados para importação". **Todo texto é escapado** (receita importada é dado não confiável, RNF09). 3 testes.
+- `ExpoPrintGeradorDePdf`: A4; fotos embutidas em base64 só se escolhidas; arquivo renomeado para o nome do livro.
+- `compartilhadorDoSistema.compartilharArquivo` com `expo-sharing`.
+
+**Spike S3 (parcial, 24/11/2026):** HTML do app (12 receitas com acentos, aspas, `&` e `<tags>`) → PDF A4 pelo WebKit do macOS (mesmo motor do expo-print no iOS) → `pdftotext` → `decodificarApendice`: **12 de 12 receitas recuperadas** com todos os campos, nos modos com e sem layout. Falta: PDF gerado no Android (outro motor), o extrator que o app vai usar no aparelho (etapa de importar) e PDF impresso e escaneado (esse cai no parser por desenho).
+
+Limites: o PDF usa Georgia e Helvetica (embutir as fontes do app fica para depois); o áudio não vai no PDF (como no desenho original).
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.
@@ -131,5 +142,5 @@ Limites: sem a animação de ondas durante a gravação (e a versão estática p
 3. ~~`adapters/persistence/`~~ feito.
 4. **`main/`**: composition root e contexto React.
 5. ~~Limpar o template e criar os tokens~~ feito. Era: tokens do moodboard: cores Farinha `#FBF6EA`, Papel `#F1E3C4`, Café `#3B2A20`, Terracota `#A93F28`, Sálvia `#6F8561`, Mostarda `#D9A441`; fontes Fraunces, Caveat e Nunito. Conferir contraste 4,5:1 (RNF05), por exemplo Mostarda sobre Farinha provavelmente não passa.
-6. Telas na ordem da seção 10 da arquitetura: livro e cadastro por texto → áudio → foto/OCR/revisão → modo cozinha, escala, lista → exportar PDF → importar PDF → transcrição.
+6. Telas na ordem da seção 10 da arquitetura (até exportar PDF, feito): livro e cadastro por texto → áudio → foto/OCR/revisão → modo cozinha, escala, lista → exportar PDF → importar PDF → transcrição.
 7. **Dev build** a partir da etapa de áudio (módulos nativos não rodam no Expo Go). Spikes S1, S2 e S4 em aparelho real antes de fechar as bibliotecas.

@@ -6,6 +6,7 @@ import { ExpoMidiaStorage } from '../adapters/native/expo-midia-storage.ts';
 import { expoPermissoes } from '../adapters/native/expo-permissoes.ts';
 import { semTranscricao } from '../adapters/native/sem-transcricao.ts';
 import { expoIds, relogioDoSistema } from '../adapters/native/sistema.ts';
+import { ExpoPrintGeradorDePdf } from '../adapters/pdf/expo-print-gerador.ts';
 import type { Banco } from '../adapters/persistence/banco.ts';
 import { SqliteListaComprasRepository } from '../adapters/persistence/sqlite-lista-compras-repository.ts';
 import { SqliteLivroRepository } from '../adapters/persistence/sqlite-livro-repository.ts';
@@ -13,6 +14,7 @@ import { SqliteRascunhoRepository } from '../adapters/persistence/sqlite-rascunh
 import { SqliteReceitaRepository } from '../adapters/persistence/sqlite-receita-repository.ts';
 import { CapturarPorVoz } from '../application/usecases/capturar-por-voz.ts';
 import { ConsultarReceitas } from '../application/usecases/consultar-receitas.ts';
+import { ExportarLivroPdf } from '../application/usecases/exportar-livro-pdf.ts';
 import { ExcluirReceita } from '../application/usecases/excluir-receita.ts';
 import { ListaDeCompras } from '../application/usecases/lista-de-compras.ts';
 import { GerenciarRascunho } from '../application/usecases/gerenciar-rascunho.ts';
@@ -21,17 +23,19 @@ import { SalvarReceitaRevisada } from '../application/usecases/salvar-receita-re
 /**
  * Composition root (D10): o único lugar que conhece todas as camadas.
  * Cria os adapters, injeta nos casos de uso e entrega só os casos de uso para a interface.
- * Foto e PDF entram aqui junto com os adapters de cada um.
+ * Foto e importação de PDF entram aqui junto com os adapters de cada um.
  */
 export function criarDependencias(banco: Banco) {
   const receitas = new SqliteReceitaRepository(banco);
   const midias = new ExpoMidiaStorage();
+  const livro = new SqliteLivroRepository(banco);
 
   return {
-    consultar: new ConsultarReceitas({ receitas, livro: new SqliteLivroRepository(banco) }),
+    consultar: new ConsultarReceitas({ receitas, livro }),
     salvar: new SalvarReceitaRevisada({ receitas, midias, ids: expoIds, relogio: relogioDoSistema }),
     rascunho: new GerenciarRascunho({ rascunhos: new SqliteRascunhoRepository(banco), receitas, midias }),
     excluir: new ExcluirReceita({ receitas, midias }),
+    exportar: new ExportarLivroPdf({ receitas, livro, gerador: new ExpoPrintGeradorDePdf(midias), compartilhador: compartilhadorDoSistema }),
     compras: new ListaDeCompras({ itens: new SqliteListaComprasRepository(banco), compartilhador: compartilhadorDoSistema, ids: expoIds }),
     /** O gravador vem do hook `useAudioRecorder` da tela (o expo-audio não cria fora de componente). */
     opcoesDeGravacao: OPCOES_DE_GRAVACAO,
