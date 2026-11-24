@@ -13,6 +13,7 @@ Projeto final da matéria de desenvolvimento de apps. App React Native (Expo) pa
 - [Arquitetura](#arquitetura)
 - [Estrutura de pastas](#estrutura-de-pastas)
 - [Como rodar](#como-rodar)
+- [Testes](#testes)
 - [Status](#status)
 - [Fluxo de branches](#fluxo-de-branches)
 
@@ -95,8 +96,13 @@ Dentro do app (`DeCasa/`):
 ```
 src/
   app/              rotas do Expo Router (só montam telas)
-  domain/           entidades e regras puras         (a fazer)
-  application/      casos de uso e ports            (a fazer)
+  domain/
+    texto.ts        normalização (acentos, maiúsculas)
+    receita/        Receita, Ingrediente, Quantidade, validação, busca, duplicata
+    parser/         texto corrido → ingredientes e passos
+    porcoes/        escala de porções
+    compras/        lista de compras e consolidação
+  application/      casos de uso e ports            (próxima etapa)
   adapters/         SQLite, nativos, PDF            (a fazer)
   presentation/     telas e componentes             (a fazer)
   main/             composition root                (a fazer)
@@ -119,13 +125,26 @@ Todos os comandos rodam dentro de `DeCasa/`.
 | Comando | O que faz |
 |---|---|
 | `npm start` | Inicia o servidor do Expo |
+| `npm test` | Roda os testes do domínio |
 | `npm run lint` | Lint do Expo |
 | `npx tsc --noEmit` | Checagem de tipos |
 
+## Testes
+
+O domínio é testado no computador, sem aparelho, com o executor nativo do Node (`node:test`). O Node 24 executa TypeScript direto, então não há Jest nem configuração extra.
+
+```bash
+cd DeCasa
+npm test
+```
+
+Cobre: leitura de quantidades e frações, escala de porções, consolidação da lista de compras, validação de receita, duplicatas, busca sem acento e o parser com receitas de caderno e texto falado.
+
+Por isso os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from '../texto.ts'`), com `allowImportingTsExtensions` ligado no `tsconfig.json`.
+
 ## Status
 
-- [x] Base do projeto (Expo, documentação, estrutura)
-- [ ] Camada de domínio com testes
+- [x] Camada de domínio com testes
 - [ ] Casos de uso e ports (`application/`)
 - [ ] Persistência SQLite
 - [ ] Telas: livro, cadastro por texto, revisão
