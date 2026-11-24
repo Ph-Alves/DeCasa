@@ -1,0 +1,20 @@
+# Regras gerais do repositório. As regras do app Expo ficam em DeCasa/.gitignore.
+
+# macOS
+.DS_Store
+
+# Editores
+.idea/
+*.swp
+
+# Segredos e variáveis de ambiente
+.env
+.env.*
+!.env.example
+*.pem
+
+# Claude Code: as configurações do projeto (.claude/settings.json) vão para o repo, as pessoais não
+**/.claude/settings.local.json
+
+# Logs
+*.log
