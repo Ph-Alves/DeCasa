@@ -108,6 +108,17 @@ export function Abas<T extends string>({ opcoes, valor, aoMudar }: { opcoes: { v
   );
 }
 
+/** Linha marcável (checkbox) com toque grande. */
+export function Marcavel({ texto, marcado, aoTocar }: { texto: string; marcado: boolean; aoTocar: () => void }) {
+  return (
+    <Pressable onPress={aoTocar} style={estilos.marcavel} accessibilityRole="checkbox" accessibilityState={{ checked: marcado }}>
+      <MaterialCommunityIcons name={marcado ? 'checkbox-marked' : 'checkbox-blank-outline'} size={26}
+        color={marcado ? cores.terracota : cores.bordaControle} />
+      <Text style={estilos.marcavelTexto}>{texto}</Text>
+    </Pressable>
+  );
+}
+
 export function Aviso({ children }: { children: ReactNode }) {
   return (
     <View style={estilos.aviso} accessibilityRole="alert">
@@ -152,6 +163,8 @@ const estilos = StyleSheet.create({
   },
   campoLongo: { minHeight: 140, lineHeight: 24, textAlignVertical: 'top' },
 
+  marcavel: { flexDirection: 'row', alignItems: 'center', gap: espaco[12], minHeight: toque.linha, paddingHorizontal: espaco[6] },
+  marcavelTexto: { flex: 1, fontFamily: fontes.corpoMedio, fontSize: tamanhos.corpo, color: cores.cafe },
   abas: { flexDirection: 'row', gap: espaco[8] },
   aba: {
     flex: 1, minHeight: toque.minimo, borderRadius: raios.pilula44, borderWidth: 1.5, borderColor: cores.bordaControle,

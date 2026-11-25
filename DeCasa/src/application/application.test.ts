@@ -12,7 +12,7 @@ import { ConsultarReceitas } from './usecases/consultar-receitas.ts';
 import { ExcluirReceita } from './usecases/excluir-receita.ts';
 import { ExportarLivroPdf } from './usecases/exportar-livro-pdf.ts';
 import { GerenciarRascunho } from './usecases/gerenciar-rascunho.ts';
-import { ImportarPdf } from './usecases/importar-pdf.ts';
+import { ImportarPdf, SEM_TEXTO } from './usecases/importar-pdf.ts';
 import { ListaDeCompras, textoDaLista } from './usecases/lista-de-compras.ts';
 import { SalvarReceitaRevisada } from './usecases/salvar-receita-revisada.ts';
 
@@ -50,7 +50,10 @@ function montar() {
   };
   const fala = { disponivel: true, texto: '' as string | Error };
   const ocr = { texto: '' as string | Error };
-  const pdf = { conteudo: { pages: [] as string[], hasText: true } as { pages: string[]; hasText: boolean } | Error };
+  const pdf = {
+    conteudo: { pages: [] as string[], hasText: true } as { pages: string[]; hasText: boolean } | Error,
+    paginas: ['pagina1.png', 'pagina2.png'],
+  };
 
   const salvar = new SalvarReceitaRevisada({ receitas, midias, ids, relogio });
   return {
@@ -94,7 +97,7 @@ function montar() {
       ocr: { recognize: async (img: string) => ({ text: `texto de ${img}` }) },
       extrator: {
         extract: async () => { if (pdf.conteudo instanceof Error) throw pdf.conteudo; return pdf.conteudo; },
-        rasterize: async () => ['pagina1.png', 'pagina2.png'],
+        rasterize: async () => pdf.paginas,
       },
     }),
   };
@@ -376,6 +379,9 @@ test('importar PDF de terceiros, escaneado e inválido (RF15)', async () => {
     assert.equal(escaneado.rascunho.titulo, 'texto de pagina1.png');
     assert.deepEqual(escaneado.rascunho.naoClassificado, ['texto de pagina2.png']);
   }
+
+  app.pdf.paginas = [];
+  assert.deepEqual(await app.importar.ler('x.pdf'), { tipo: 'erro', mensagem: SEM_TEXTO }, 'escaneado sem páginas lidas');
 
   app.pdf.conteudo = new ArquivoInvalidoError('Esse arquivo não é um PDF.');
   assert.deepEqual(await app.importar.ler('x.txt'), { tipo: 'erro', mensagem: 'Esse arquivo não é um PDF.' });

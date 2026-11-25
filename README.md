@@ -33,7 +33,7 @@ Receita de família quase nunca está escrita direito. Ela vive na cabeça de qu
 | Revisão | Parser separa ingredientes e passos; nada é salvo sem revisão | RF07, RF08 |
 | Receita | Ver, editar, excluir, ouvir o áudio original | RF09, RF10 |
 | Cozinha | Modo cozinha (letra grande, tela acesa, um passo por vez), escala de porções, lista de compras | RF11 a RF13 |
-| PDF | Exportar o livro e importar PDF (do app, de terceiros ou escaneado), com tratamento de duplicatas | RF14 a RF16 |
+| PDF | Exportar o livro e importar PDF (do app ou de terceiros), com tratamento de duplicatas | RF14 a RF16 |
 
 Princípios: **offline-first** (sem servidor, conta ou sincronização), **sem IA paga** (OCR, fala e parser no aparelho ou por regras) e **revisão humana sempre**.
 
@@ -60,7 +60,7 @@ Os documentos do projeto ficam em [`Docs/`](Docs/):
 | Áudio | `expo-audio` |
 | Foto e OCR | `expo-image-picker` + `expo-text-extractor` (Vision no iOS, ML Kit no Android, no aparelho) |
 | Transcrição | `expo-speech-recognition` ou `whisper.rn` (a definir) |
-| PDF | `expo-print`, `expo-sharing`, `expo-document-picker` |
+| PDF | `expo-print`, `expo-sharing`, `expo-document-picker`, `expo-pdf-text-extract` (PDFKit no iOS, PDFBox no Android) |
 | Tela acesa | `expo-keep-awake` |
 
 As bibliotecas de transcrição, OCR e extração de PDF ainda serão validadas em aparelho real.
@@ -109,7 +109,7 @@ src/
   adapters/
     persistence/    SQLite: migrações e repositórios
     native/         mídia, gravação (expo-audio), permissões, ids, relógio; OCR; fala a fazer
-    pdf/            modelo HTML do livro e gerador (expo-print)
+    pdf/            modelo HTML do livro, gerador (expo-print) e leitor de PDF
   presentation/
     ui/tokens.ts    cores, fontes, medidas e sombras do design system
     ui/componentes  Tela, Cabeçalho, Botão, Campo, Aviso
@@ -118,7 +118,7 @@ src/
     captura/        gravador de voz
     cozinha/        modo cozinha
     compras/        lista de compras
-    pdf/            exportar livro
+    pdf/            exportar e importar livro
   main/             composition root: abre o banco e entrega os casos de uso às telas
 ```
 
@@ -181,10 +181,10 @@ Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from 
 - [x] Composition root, tokens do design system e fontes
 - [x] Telas: livro, cadastro por texto, revisão, ver, editar e excluir
 - [x] Áudio: gravar, ouvir, regravar, descartar e player na receita
-- [ ] Foto e OCR
+- [x] Foto e OCR
 - [x] Modo cozinha, escala de porções e lista de compras
 - [x] Exportar PDF
-- [ ] Importar PDF
+- [x] Importar PDF (PDF escaneado: aviso para usar a aba Foto)
 - [ ] Transcrição automática
 
 ## Fluxo de branches

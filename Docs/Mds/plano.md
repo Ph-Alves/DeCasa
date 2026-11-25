@@ -150,6 +150,16 @@ Limites: o PDF usa Georgia e Helvetica (embutir as fontes do app fica para depoi
 - Spike S2 (parcial, no Mac): o Vision com a configuração da lib (sem idioma definido) leu uma receita impressa com todos os acentos. Ainda falta testar letra de mão em aparelho real.
 - O `app.json` ganhou o plugin `expo-image-picker` com os textos de câmera e fotos. Lição: o `run:ios` não reaplica plugins numa pasta `ios/` que já existe. Use `prebuild --clean`.
 
+## 3.10 Feito: importar PDF (RF15, RF16)
+
+- Botão "Importar PDF" no livro, que abre a tela `/importar`. O `expo-document-picker` copia o arquivo para o cache, e PDF acima de 50 MB é recusado (RNF09).
+- `expo-pdf-text-extract` (PDFKit / PDFBox). Li o código nativo antes de adotar. PDF com senha ou corrompido mostra uma mensagem clara.
+- **PDF do app:** resumo com as receitas. Receita nova vem marcada; duplicata (mesmo título e autor) começa em **Pular**, com as opções Substituir (troca o texto e mantém áudio e fotos do livro) ou As duas. No fim, um alerta diz quantas entraram e por que alguma falhou.
+- **PDF de terceiros:** parser, depois revisão (RN02), com aviso se já existe receita parecida.
+- **Escaneado:** shortcut. O adapter não rasteriza páginas (a `expo-pdf-to-image` gera a 72 dpi, baixo demais para OCR), então o caso de uso devolve o aviso para usar a aba Foto. Upgrade: módulo local com PDFKit/PdfRenderer em 2x.
+- S4 (parcial, no Mac): o `livro.pdf` do S3, extraído com PDFKit do jeito da lib, devolveu 12/12 receitas pelo `decodificarApendice`.
+- `Marcavel` foi para `ui/componentes.tsx` (exportar e importar usam).
+
 ## 4. Próximas etapas (em ordem)
 
 1. ~~`application/`~~ feito.

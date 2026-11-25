@@ -15,6 +15,9 @@ export type LeituraDoPdf =
   | ({ tipo: 'terceiros' | 'escaneado' } & ItemImportado)
   | { tipo: 'erro'; mensagem: string };
 
+/** Escaneado sem páginas lidas (ou adapter sem rasterização): a aba Foto lê a mesma receita. */
+export const SEM_TEXTO = 'Não foi possível ler texto neste PDF. Se for uma receita escaneada, tire uma foto dela pela aba Foto da Nova receita.';
+
 export type EscolhaDeImportacao = 'manter-ambas' | 'substituir' | 'pular';
 
 type Deps = {
@@ -64,7 +67,9 @@ export class ImportarPdf {
     for (const imagem of await this.d.extrator.rasterize(pdfUri)) {
       textos.push((await this.d.ocr.recognize(imagem)).text);
     }
-    return { tipo: 'escaneado', ...marcar(rascunhoDoTexto(textos.join('\n'), 'pdf')) };
+    const lido = textos.join('\n');
+    if (!lido.trim()) return { tipo: 'erro', mensagem: SEM_TEXTO };
+    return { tipo: 'escaneado', ...marcar(rascunhoDoTexto(lido, 'pdf')) };
   }
 
   /** Grava o que o usuário confirmou no resumo do PDF do app. */

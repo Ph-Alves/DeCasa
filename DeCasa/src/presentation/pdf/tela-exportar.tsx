@@ -1,10 +1,9 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { Receita } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
-import { Aviso, Botao, Cabecalho, Campo, Tela } from '../ui/componentes.tsx';
+import { Aviso, Botao, Cabecalho, Campo, Marcavel, Tela } from '../ui/componentes.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from '../ui/tokens.ts';
 
 /** RF14: escolher receitas, nome da capa e fotos; gerar e depois compartilhar ou imprimir. */
@@ -92,16 +91,6 @@ export function TelaExportar() {
   );
 }
 
-function Marcavel({ texto, marcado, aoTocar }: { texto: string; marcado: boolean; aoTocar: () => void }) {
-  return (
-    <Pressable onPress={aoTocar} style={estilos.marcavel} accessibilityRole="checkbox" accessibilityState={{ checked: marcado }}>
-      <MaterialCommunityIcons name={marcado ? 'checkbox-marked' : 'checkbox-blank-outline'} size={26}
-        color={marcado ? cores.terracota : cores.bordaControle} />
-      <Text style={estilos.marcavelTexto}>{texto}</Text>
-    </Pressable>
-  );
-}
-
 const estilos = StyleSheet.create({
   capa: {
     alignSelf: 'center', width: 180, height: 240, borderRadius: 10, backgroundColor: cores.terracota,
@@ -118,6 +107,4 @@ const estilos = StyleSheet.create({
   link: { minHeight: toque.minimo, justifyContent: 'center' },
   linkTexto: { fontFamily: fontes.corpoForte, fontSize: tamanhos.pequeno, color: cores.terracota },
   lista: { backgroundColor: cores.cartao, borderRadius: raios.card, borderWidth: 1, borderColor: cores.borda, paddingHorizontal: espaco[8] },
-  marcavel: { flexDirection: 'row', alignItems: 'center', gap: espaco[12], minHeight: toque.linha, paddingHorizontal: espaco[6] },
-  marcavelTexto: { flex: 1, fontFamily: fontes.corpoMedio, fontSize: tamanhos.corpo, color: cores.cafe },
 });

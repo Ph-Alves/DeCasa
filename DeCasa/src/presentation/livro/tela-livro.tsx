@@ -50,6 +50,7 @@ export function TelaLivro() {
       <View style={[estilos.linha, { flexWrap: 'wrap' }]}>
         {total > 0 && <Botao tipo="secundario" icone="export-variant" titulo="Exportar livro" aoTocar={() => router.push('/exportar')} />}
         <Botao tipo="secundario" icone="cart" titulo="Lista de compras" aoTocar={() => router.push('/compras')} />
+        <Botao tipo="secundario" icone="file-import-outline" titulo="Importar PDF" aoTocar={() => router.push('/importar')} />
       </View>
 
       {pendente && (
