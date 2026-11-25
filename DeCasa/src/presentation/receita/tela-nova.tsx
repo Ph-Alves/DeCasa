@@ -31,7 +31,10 @@ export function TelaNova() {
   // Sair da tela com uma gravação que não foi para a revisão: o arquivo não pode ficar órfão.
   const pendente = useRef<Midia | null>(null);
   pendente.current = audio;
+  // Saiu no meio da transcrição: para o reconhecedor.
+  const transcricao = useRef<AbortController | null>(null);
   useEffect(() => () => {
+    transcricao.current?.abort();
     if (pendente.current) voz.descartar(pendente.current);
   }, [voz]);
 
@@ -61,7 +64,9 @@ export function TelaNova() {
   async function continuar() {
     setOcupado(true);
     if (aba === 'voz' && audio) {
-      const { rascunho } = await voz.transcrever(audio);
+      transcricao.current = new AbortController();
+      const { rascunho, problema } = await voz.transcrever(audio, { signal: transcricao.current.signal });
+      if (problema === 'cancelada') return;
       if (await abrirRevisao(deps.rascunho, rascunho)) {
         pendente.current = null; // agora o áudio é do rascunho
         setAudio(null);
@@ -75,7 +80,8 @@ export function TelaNova() {
   const podeContinuar = aba === 'texto' || audio !== null;
   const acao = aba === 'foto'
     ? <Botao icone="camera" titulo={ocupado ? 'Lendo a foto...' : 'Tirar foto da receita'} aoTocar={() => lerFoto('camera')} desativado={ocupado} />
-    : <Botao titulo="Continuar: ingredientes e passos" aoTocar={continuar} desativado={!podeContinuar || ocupado} />;
+    : <Botao titulo={ocupado && aba === 'voz' ? 'Transformando o áudio em texto...' : 'Continuar: ingredientes e passos'}
+        aoTocar={continuar} desativado={!podeContinuar || ocupado} />;
   return (
     <Tela acao={acao}>
       <Cabecalho titulo="Nova receita" rotulo="como a vó prefere contar?" />

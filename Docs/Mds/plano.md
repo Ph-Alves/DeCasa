@@ -43,7 +43,7 @@ TypeScript puro, sem nenhuma dependência. Testes rodam no computador com `npm t
 
 Limites conhecidos (marcados com `shortcut:` no código):
 - Escala não põe a unidade no plural ("2 xícara").
-- O parser não separa vários ingredientes numa só frase falada ("duas xícaras de fubá, uma de açúcar e três ovos" vira um passo). Rever depois do spike S1, com transcrições reais.
+- O parser separa vários ingredientes numa frase falada só quando todo pedaço depois do primeiro é ingrediente; o primeiro pode virar o título ("Bolo da vó, duas xícaras de fubá e três ovos").
 
 ## 3.1 Feito: camada `application/`
 
@@ -147,6 +147,7 @@ Limites: o PDF usa Georgia e Helvetica (embutir as fontes do app fica para depoi
 - Aba **Foto** na "Nova receita": "Tirar foto da receita" (pede a câmera só nessa hora) e "Escolher foto do aparelho" (galeria, sem permissão no iOS 14+).
 - `expo-image-picker` já entrega a foto endireitada (EXIF), e o `expo-text-extractor` (Vision / ML Kit) lê o texto no aparelho. O texto passa pelo mesmo parser e vai para a revisão (RN02), com a foto no topo para conferir.
 - Se não houver texto ou o OCR falhar, a foto vai mesmo assim para a revisão, com um aviso. Se a pessoa cancelar antes da revisão, `CapturarPorFoto.descartar` apaga a foto.
+- Spike S1 (parcial, 25/11/2026): módulo local `modules/transcricao-local` com SpeechAnalyzer (iOS 26+; o SFSpeechRecognizer para na primeira pausa). No Mac, o mesmo código transcreveu o áudio de teste em pt_BR com boa precisão ("Bolo de fubá davó, duas xícaras de fubá, três ovos e meia xícara de açúcar. Bá tá tudo no liquidificador..."). No simulador falha com "not subscribed to transcription.pt" (o simulador não instala o modelo de fala); a revisão abre com o áudio, como previsto. Falta: aparelho real, sotaque e barulho de cozinha.
 - Spike S2 (parcial, no Mac): o Vision com a configuração da lib (sem idioma definido) leu uma receita impressa com todos os acentos. Ainda falta testar letra de mão em aparelho real.
 - O `app.json` ganhou o plugin `expo-image-picker` com os textos de câmera e fotos. Lição: o `run:ios` não reaplica plugins numa pasta `ios/` que já existe. Use `prebuild --clean`.
 
@@ -167,5 +168,5 @@ Limites: o PDF usa Georgia e Helvetica (embutir as fontes do app fica para depoi
 3. ~~`adapters/persistence/`~~ feito.
 4. **`main/`**: composition root e contexto React.
 5. ~~Limpar o template e criar os tokens~~ feito. Era: tokens do moodboard: cores Farinha `#FBF6EA`, Papel `#F1E3C4`, Café `#3B2A20`, Terracota `#A93F28`, Sálvia `#6F8561`, Mostarda `#D9A441`; fontes Fraunces, Caveat e Nunito. Conferir contraste 4,5:1 (RNF05), por exemplo Mostarda sobre Farinha provavelmente não passa.
-6. Telas na ordem da seção 10 da arquitetura (até exportar PDF, feito): livro e cadastro por texto → áudio → foto/OCR/revisão → modo cozinha, escala, lista → exportar PDF → importar PDF → transcrição.
+6. Telas na ordem da seção 10 da arquitetura (até exportar PDF, feito): livro e cadastro por texto → áudio → foto/OCR/revisão → modo cozinha, escala, lista → exportar PDF → importar PDF → transcrição (feito no código; falta validar em aparelho real).
 7. **Dev build** a partir da etapa de áudio (módulos nativos não rodam no Expo Go). Spikes S1, S2 e S4 em aparelho real antes de fechar as bibliotecas.

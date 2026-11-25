@@ -5,7 +5,7 @@ import { ExpoAudioRecorder, OPCOES_DE_GRAVACAO } from '../adapters/native/expo-a
 import { ExpoMidiaStorage } from '../adapters/native/expo-midia-storage.ts';
 import { ocrDoAparelho } from '../adapters/native/expo-ocr.ts';
 import { expoPermissoes } from '../adapters/native/expo-permissoes.ts';
-import { semTranscricao } from '../adapters/native/sem-transcricao.ts';
+import { transcricaoNoAparelho } from '../adapters/native/transcricao-no-aparelho.ts';
 import { expoIds, relogioDoSistema } from '../adapters/native/sistema.ts';
 import { leitorDePdf, seletorDoSistema } from '../adapters/pdf/leitor-de-pdf.ts';
 import { ExpoPrintGeradorDePdf } from '../adapters/pdf/expo-print-gerador.ts';
@@ -47,7 +47,7 @@ export function criarDependencias(banco: Banco) {
     opcoesDeGravacao: OPCOES_DE_GRAVACAO,
     capturaPorVoz: (gravador: GravadorDoExpo) =>
       new CapturarPorVoz({
-        gravador: new ExpoAudioRecorder(gravador), fala: semTranscricao, midias,
+        gravador: new ExpoAudioRecorder(gravador), fala: transcricaoNoAparelho, midias,
         permissoes: expoPermissoes, ids: expoIds, relogio: relogioDoSistema,
       }),
     /** Para tocar áudio e mostrar foto: caminho relativo → file://. */

@@ -128,7 +128,7 @@ export function TelaRevisar() {
       {foto && !foto.transcricao && !base?.receitaId ? (
         <Aviso>Não deu para ler o texto da foto. Escreva os ingredientes e o passo a passo olhando para ela. A foto fica guardada junto da receita.</Aviso>
       ) : audio && !audio.transcricao && !base?.receitaId ? (
-        <Aviso>Ouça a gravação e escreva os ingredientes e o passo a passo. O áudio fica guardado junto da receita. A transcrição automática ainda não está disponível.</Aviso>
+        <Aviso>Ouça a gravação e escreva os ingredientes e o passo a passo. O áudio fica guardado junto da receita. Não deu para transformar o áudio em texto neste aparelho.</Aviso>
       ) : (
         base?.origem !== 'texto' && !base?.receitaId && (
           <Aviso>Confira se está igual ao original e corrija o que precisar. Nada vai para o livro antes de você salvar.</Aviso>

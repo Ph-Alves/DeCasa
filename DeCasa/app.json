@@ -9,7 +9,10 @@
     "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.phalves.decasa"
+      "bundleIdentifier": "com.phalves.decasa",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "O De Casa transforma o áudio gravado em texto para preencher a receita. Tudo acontece no seu aparelho."
+      }
     },
     "android": {
       "adaptiveIcon": {

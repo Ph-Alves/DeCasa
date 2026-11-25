@@ -73,6 +73,18 @@ function ehPasso(linha: string): boolean {
   return VERBOS_DE_PASSO.has(primeira) || linha.split(/\s+/).length >= PALAVRAS_PARA_SER_PASSO;
 }
 
+/**
+ * Frase falada com vários ingredientes: "Bolo da vó, duas xícaras de fubá, três ovos e meia de açúcar".
+ * Só separa se todo pedaço depois do primeiro for ingrediente; o primeiro pode ser o título (`antes`).
+ */
+function variosIngredientes(linha: string): { antes: string | null; itens: Omit<Ingrediente, 'id'>[] } | null {
+  const partes = linha.replace(/[.;]$/, '').split(/,\s+|\s+e\s+/i);
+  if (partes.length < 2) return null;
+  const [primeiro, ...resto] = partes.map((p) => lerIngrediente(p, false));
+  if (resto.some((x) => !x)) return null;
+  return { antes: primeiro ? null : partes[0], itens: [primeiro, ...resto].filter((x) => x !== null) };
+}
+
 /** Quebra em linhas e, dentro de linhas longas (texto falado), em frases. */
 function emLinhas(texto: string): string[] {
   return texto
@@ -86,7 +98,6 @@ function emLinhas(texto: string): string[] {
 /**
  * RF07: separa texto corrido (OCR, transcrição, PDF ou colado) em título, ingredientes e passos.
  * Determinístico. O que não dá para classificar vai para `naoClassificado`.
- * shortcut: não separa vários ingredientes na mesma frase ("2 ovos, 1 de açúcar e..."); melhorar após o spike S1.
  */
 export function textoParaReceita(texto: string): ReceitaExtraida {
   const saida: ReceitaExtraida = { titulo: '', ingredientes: [], passos: [], naoClassificado: [] };
@@ -99,6 +110,14 @@ export function textoParaReceita(texto: string): ReceitaExtraida {
     // Subtítulo tipo "Massa:" ou "Cobertura:": o usuário decide onde fica.
     if (linha.endsWith(':')) { saida.naoClassificado.push(linha); continue; }
     if (secao === 'preparo') { saida.passos.push(linha); continue; }
+
+    const varios = variosIngredientes(linha);
+    const tituloAntes = varios?.antes && i === 0 && varios.antes.length <= 60 && !ehPasso(varios.antes);
+    if (varios && (!varios.antes || tituloAntes)) {
+      if (varios.antes) saida.titulo = varios.antes;
+      saida.ingredientes.push(...varios.itens);
+      continue;
+    }
 
     const ingrediente = lerIngrediente(linha, false);
     if (ingrediente) { saida.ingredientes.push(ingrediente); continue; }

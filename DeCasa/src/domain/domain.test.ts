@@ -137,6 +137,21 @@ test('parser: texto falado sem quebras de linha (RF07)', () => {
   assert.deepEqual(r.naoClassificado, ['Pronto.']);
 });
 
+test('parser: vários ingredientes numa frase falada (transcrição real do spike S1)', () => {
+  const r = textoParaReceita(
+    'Bolo de fubá davó, duas xícaras de fubá, três ovos e meia xícara de açúcar. Bá tá tudo no liquidificador liasse por quarenta minutos.',
+  );
+  assert.equal(r.titulo, 'Bolo de fubá davó');
+  assert.deepEqual(r.ingredientes.map((i) => [i.quantidade.valor, i.unidade, i.nome]),
+    [[2, 'xícaras', 'fubá'], [3, null, 'ovos'], [0.5, 'xícara', 'açúcar']]);
+  assert.equal(r.passos.length, 1);
+  // Não separa quando um pedaço não é ingrediente: passo e "sal e pimenta" ficam inteiros.
+  assert.deepEqual(textoParaReceita('Bata 3 ovos e 2 xícaras de açúcar').passos, ['Bata 3 ovos e 2 xícaras de açúcar']);
+  assert.deepEqual(textoParaReceita('2 ovos\nsal e pimenta a gosto').ingredientes.map((i) => i.nome), ['ovos', 'sal e pimenta']);
+  assert.deepEqual(textoParaReceita('1 lata de leite condensado e 1 de creme de leite').ingredientes.map((i) => i.nome),
+    ['leite condensado', 'creme de leite']);
+});
+
 test('parser é determinístico e não quebra com texto vazio ou estranho', () => {
   const texto = 'Massa:\n200g farinha\nMexa bem.';
   assert.deepEqual(textoParaReceita(texto), textoParaReceita(texto));
