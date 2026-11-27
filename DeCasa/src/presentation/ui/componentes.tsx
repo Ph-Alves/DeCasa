@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import type { ComponentProps, ReactNode } from 'react';
 import {
-  Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  InputAccessoryView, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
   type StyleProp, type TextInputProps, type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,6 +21,7 @@ export function Tela({ children, acao, capa }: { children: ReactNode; acao?: Rea
       <ScrollView
         contentContainerStyle={capa ? estilos.comCapa : estilos.conteudo}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         automaticallyAdjustKeyboardInsets
       >
         {capa}
@@ -28,6 +29,23 @@ export function Tela({ children, acao, capa }: { children: ReactNode; acao?: Rea
       </ScrollView>
       {acao && <View style={estilos.rodape}>{acao}</View>}
     </SafeAreaView>
+  );
+}
+
+/** Liga um TextInput à barra "Fechar teclado" (iOS). Campo de várias linhas não fecha com o Enter. */
+export const BARRA_DO_TECLADO = 'barra-do-teclado';
+
+/** Montada uma vez no layout raiz; no Android o botão voltar já fecha o teclado. */
+export function BarraDoTeclado() {
+  if (Platform.OS !== 'ios') return null;
+  return (
+    <InputAccessoryView nativeID={BARRA_DO_TECLADO}>
+      <View style={estilos.barraTeclado}>
+        <Pressable onPress={() => Keyboard.dismiss()} style={estilos.fecharTeclado} accessibilityRole="button" hitSlop={8}>
+          <Text style={estilos.fecharTecladoTexto}>Fechar teclado</Text>
+        </Pressable>
+      </View>
+    </InputAccessoryView>
   );
 }
 
@@ -89,6 +107,7 @@ export function Campo({ rotulo, ...props }: { rotulo: string } & TextInputProps)
       <TextInput
         accessibilityLabel={rotulo}
         placeholderTextColor={cores.cafeSuave}
+        inputAccessoryViewID={BARRA_DO_TECLADO}
         {...props}
         style={[estilos.campo, props.multiline && estilos.campoLongo, props.style]}
       />
@@ -202,6 +221,12 @@ const estilos = StyleSheet.create({
 
   aviso: { flexDirection: 'row', gap: espaco[10], backgroundColor: cores.mostardaClara, borderRadius: raios.aviso, padding: espaco[14] },
   avisoTexto: { flex: 1, fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, lineHeight: 21, color: cores.cafe },
+  barraTeclado: {
+    flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: espaco[16],
+    backgroundColor: cores.papel, borderTopWidth: 1, borderTopColor: cores.borda,
+  },
+  fecharTeclado: { minHeight: toque.minimo, justifyContent: 'center' },
+  fecharTecladoTexto: { fontFamily: fontes.corpoForte, fontSize: tamanhos.corpo, color: cores.terracota },
   xadrez: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   listra: { position: 'absolute', backgroundColor: 'rgba(169,63,40,0.16)' },
 });
