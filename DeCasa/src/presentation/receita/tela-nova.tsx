@@ -1,5 +1,4 @@
 import { useAudioRecorder } from 'expo-audio';
-import { launchCameraAsync, launchImageLibraryAsync, type ImagePickerOptions } from 'expo-image-picker';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
@@ -10,11 +9,9 @@ import { GravadorDeVoz } from '../captura/gravador-de-voz.tsx';
 import { Abas, Botao, Cabecalho, Campo, Tela } from '../ui/componentes.tsx';
 import { cores, fontes, tamanhos } from '../ui/tokens.ts';
 import { abrirRevisao, perguntar } from './abrir-revisao.ts';
+import { escolherFoto } from './escolher-foto.ts';
 
 type Aba = 'voz' | 'foto' | 'texto';
-
-// A foto vira mídia da receita: qualidade boa para ler, sem pesar no aparelho (RNF04).
-const OPCOES_DA_FOTO: ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8 };
 
 /**
  * RF03, RF04 e RF05. Voz é a aba padrão: do livro até gravar são 2 toques (RNF06).
@@ -40,15 +37,11 @@ export function TelaNova() {
 
   /** RF05: fotografar ou escolher a foto, ler o texto no aparelho e abrir a revisão com a foto ao lado. */
   async function lerFoto(origem: 'camera' | 'galeria') {
-    if (origem === 'camera' && (await deps.capturaPorFoto.pedirCamera()) === 'negada') {
-      await perguntar('Sem acesso à câmera', 'Libere a câmera para o De Casa nos Ajustes, ou escolha uma foto que já está no aparelho.', [{ texto: 'Entendi' }]);
-      return;
-    }
     setOcupado(true);
     try {
-      const escolha = origem === 'camera' ? await launchCameraAsync(OPCOES_DA_FOTO) : await launchImageLibraryAsync(OPCOES_DA_FOTO);
-      if (escolha.canceled) return;
-      const { rascunho, problema } = await deps.capturaPorFoto.extrair(escolha.assets[0].uri);
+      const uri = await escolherFoto(origem, () => deps.capturaPorFoto.pedirCamera());
+      if (!uri) return;
+      const { rascunho, problema } = await deps.capturaPorFoto.extrair(uri);
       if (problema === 'falhou') {
         await perguntar('Não deu para ler a foto', 'A foto vai para a revisão e você escreve a receita olhando para ela.', [{ texto: 'Continuar' }]);
       }
@@ -79,7 +72,7 @@ export function TelaNova() {
 
   const podeContinuar = aba === 'texto' || audio !== null;
   const acao = aba === 'foto'
-    ? <Botao icone="camera" titulo={ocupado ? 'Lendo a foto...' : 'Tirar foto da receita'} aoTocar={() => lerFoto('camera')} desativado={ocupado} />
+    ? <Botao icone="camera" titulo={ocupado ? 'Lendo a foto...' : 'Fotografar a página'} aoTocar={() => lerFoto('camera')} desativado={ocupado} />
     : <Botao titulo={ocupado && aba === 'voz' ? 'Transformando o áudio em texto...' : 'Continuar: ingredientes e passos'}
         aoTocar={continuar} desativado={!podeContinuar || ocupado} />;
   return (

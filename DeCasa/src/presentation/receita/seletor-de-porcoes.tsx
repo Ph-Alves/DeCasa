@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { cores, espaco, fontes, raios, tamanhos, toque } from '../ui/tokens.ts';
+import { cores, espaco, fontes, tamanhos, toque } from '../ui/tokens.ts';
 
 /**
  * RF12. Com rendimento informado mostra porções; sem ele, "vezes a receita".
@@ -27,13 +27,11 @@ export function SeletorDePorcoes({ valor, aoMudar, temRendimento }: { valor: num
 }
 
 const estilos = StyleSheet.create({
-  linha: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: espaco[12],
-    padding: espaco[6], borderRadius: raios.pilula56, backgroundColor: cores.papel,
-  },
+  // Compacto, ao lado do título "Ingredientes" (protótipo, Ver receita).
+  linha: { flexDirection: 'row', alignItems: 'center', gap: espaco[4] },
   botao: {
     width: toque.minimo, height: toque.minimo, borderRadius: toque.minimo / 2,
-    backgroundColor: cores.cartao, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: cores.papel, alignItems: 'center', justifyContent: 'center',
   },
-  valor: { fontFamily: fontes.corpoForte, fontSize: tamanhos.corpo, color: cores.cafe },
+  valor: { minWidth: 76, textAlign: 'center', fontFamily: fontes.corpoForte, fontSize: tamanhos.pequeno, color: cores.cafe },
 });

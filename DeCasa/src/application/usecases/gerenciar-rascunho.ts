@@ -1,4 +1,4 @@
-import type { Rascunho } from '../../domain/receita/receita.ts';
+import type { Midia, Rascunho } from '../../domain/receita/receita.ts';
 import type { MidiaStorage } from '../ports/plataforma.ts';
 import type { RascunhoRepository, ReceitaRepository } from '../ports/repositorios.ts';
 import { apagarArquivos } from './apagar-arquivos.ts';
@@ -28,9 +28,25 @@ export class GerenciarRascunho {
 
   /** O usuário desistiu: some o rascunho e as mídias que não pertencem a uma receita salva. */
   async descartar(rascunho: Rascunho): Promise<void> {
-    const salva = rascunho.receitaId ? await this.d.receitas.obter(rascunho.receitaId) : null;
-    const orfas = rascunho.midias.filter((m) => !salva?.midias.some((s) => s.id === m.id));
+    const orfas = await this.semReceitaSalva(rascunho, rascunho.midias);
     await this.d.rascunhos.limpar();
     await apagarArquivos(this.d.midias, orfas);
+  }
+
+  /**
+   * RF05 e RF10: troca a foto do rascunho, ou tira com `nova` null.
+   * A antiga só sai do aparelho se não for de uma receita salva; a da receita sai ao salvar a edição.
+   */
+  async trocarFoto(rascunho: Rascunho, nova: Midia | null): Promise<Rascunho> {
+    const antigas = rascunho.midias.filter((m) => m.tipo === 'foto');
+    const atualizado = { ...rascunho, midias: [...rascunho.midias.filter((m) => m.tipo !== 'foto'), ...(nova ? [nova] : [])] };
+    await this.d.rascunhos.salvar(atualizado);
+    await apagarArquivos(this.d.midias, await this.semReceitaSalva(rascunho, antigas));
+    return atualizado;
+  }
+
+  private async semReceitaSalva(rascunho: Rascunho, midias: Midia[]): Promise<Midia[]> {
+    const salva = rascunho.receitaId ? await this.d.receitas.obter(rascunho.receitaId) : null;
+    return midias.filter((m) => !salva?.midias.some((s) => s.id === m.id));
   }
 }

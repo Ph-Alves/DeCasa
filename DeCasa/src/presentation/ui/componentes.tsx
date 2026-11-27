@@ -11,28 +11,38 @@ import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from './tokens
 
 export type NomeDoIcone = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-/** Fundo Farinha, margem de 24 e ação principal fixa embaixo (uma por tela). */
-export function Tela({ children, acao }: { children: ReactNode; acao?: ReactNode }) {
+/**
+ * Fundo Farinha, margem de 24 e ação principal fixa embaixo (uma por tela).
+ * `capa` ocupa a largura toda no topo, por baixo da barra de status (foto da receita).
+ */
+export function Tela({ children, acao, capa }: { children: ReactNode; acao?: ReactNode; capa?: ReactNode }) {
   return (
-    <SafeAreaView style={estilos.tela} edges={['top', 'bottom']}>
+    <SafeAreaView style={estilos.tela} edges={capa ? ['bottom'] : ['top', 'bottom']}>
       <ScrollView
-        contentContainerStyle={estilos.conteudo}
+        contentContainerStyle={capa ? estilos.comCapa : estilos.conteudo}
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
-        {children}
+        {capa}
+        {capa ? <View style={estilos.conteudo}>{children}</View> : children}
       </ScrollView>
       {acao && <View style={estilos.rodape}>{acao}</View>}
     </SafeAreaView>
   );
 }
 
-export function Cabecalho({ titulo, rotulo, aoVoltar = () => router.back() }: { titulo: string; rotulo?: string; aoVoltar?: () => void }) {
+export function BotaoVoltar({ aoVoltar = () => router.back(), estilo }: { aoVoltar?: () => void; estilo?: StyleProp<ViewStyle> }) {
+  return (
+    <Pressable onPress={aoVoltar} style={[estilos.voltar, estilo]} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>
+      <MaterialCommunityIcons name="arrow-left" size={22} color={cores.cafe} />
+    </Pressable>
+  );
+}
+
+export function Cabecalho({ titulo, rotulo, aoVoltar }: { titulo: string; rotulo?: string; aoVoltar?: () => void }) {
   return (
     <View style={estilos.cabecalho}>
-      <Pressable onPress={aoVoltar} style={estilos.voltar} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={8}>
-        <MaterialCommunityIcons name="arrow-left" size={22} color={cores.cafe} />
-      </Pressable>
+      <BotaoVoltar aoVoltar={aoVoltar} />
       <View style={{ flex: 1 }}>
         {rotulo && <Text style={estilos.rotulo}>{rotulo}</Text>}
         <Text style={estilos.titulo} accessibilityRole="header">{titulo}</Text>
@@ -122,7 +132,23 @@ export function Marcavel({ texto, marcado, aoTocar }: { texto: string; marcado: 
 export function Aviso({ children }: { children: ReactNode }) {
   return (
     <View style={estilos.aviso} accessibilityRole="alert">
+      <MaterialCommunityIcons name="information-outline" size={22} color={cores.cafe} />
       <Text style={estilos.avisoTexto}>{children}</Text>
+    </View>
+  );
+}
+
+const LISTRA = 12;
+
+/** Tecido xadrez do tile sem foto: listras Terracota translúcidas que se cruzam (protótipo, livro). */
+export function Xadrez({ cor, altura, children }: { cor: string; altura: number; children?: ReactNode }) {
+  const listras = (n: number) => Array.from({ length: n }, (_, i) => i * LISTRA * 2);
+  return (
+    <View style={[estilos.xadrez, { backgroundColor: cor, height: altura }]}>
+      {/* shortcut: 12 colunas cobrem um tile de até 288 de largura; aumentar se o card crescer (iPad). */}
+      {listras(12).map((x) => <View key={`v${x}`} style={[estilos.listra, { left: x, top: 0, bottom: 0, width: LISTRA }]} />)}
+      {listras(Math.ceil(altura / (LISTRA * 2))).map((y) => <View key={`h${y}`} style={[estilos.listra, { top: y, left: 0, right: 0, height: LISTRA }]} />)}
+      {children}
     </View>
   );
 }
@@ -130,6 +156,7 @@ export function Aviso({ children }: { children: ReactNode }) {
 const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.farinha },
   conteudo: { padding: espaco.tela, gap: espaco[16], paddingBottom: espaco.tela * 2 },
+  comCapa: { paddingBottom: espaco.tela * 2 },
   rodape: { paddingHorizontal: espaco.tela, paddingTop: espaco[8], paddingBottom: espaco[8], backgroundColor: cores.farinha },
 
   cabecalho: { flexDirection: 'row', alignItems: 'center', gap: espaco[12] },
@@ -173,6 +200,8 @@ const estilos = StyleSheet.create({
   abaAtiva: { backgroundColor: cores.terracota, borderColor: cores.terracota },
   abaTexto: { fontFamily: fontes.corpoForte, fontSize: 15, color: cores.cafe },
 
-  aviso: { backgroundColor: cores.mostardaClara, borderRadius: raios.aviso, padding: espaco[14] },
-  avisoTexto: { fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, lineHeight: 21, color: cores.cafe },
+  aviso: { flexDirection: 'row', gap: espaco[10], backgroundColor: cores.mostardaClara, borderRadius: raios.aviso, padding: espaco[14] },
+  avisoTexto: { flex: 1, fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, lineHeight: 21, color: cores.cafe },
+  xadrez: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  listra: { position: 'absolute', backgroundColor: 'rgba(169,63,40,0.16)' },
 });

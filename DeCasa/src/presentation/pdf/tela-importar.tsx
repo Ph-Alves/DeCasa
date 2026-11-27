@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -60,7 +61,7 @@ export function TelaImportar() {
   const acao = itens
     ? <Botao icone="book-plus" titulo={lendo ? 'Importando...' : `Importar ${quantas === 1 ? '1 receita' : `${quantas} receitas`}`}
         aoTocar={importarEscolhidas} desativado={quantas === 0 || lendo} />
-    : <Botao icone="file-pdf-box" titulo={lendo ? 'Lendo o PDF...' : 'Escolher PDF'} aoTocar={escolherPdf} desativado={lendo} />;
+    : <Botao icone="file-pdf-box" titulo={lendo ? 'Lendo o PDF...' : 'Escolher arquivo PDF'} aoTocar={escolherPdf} desativado={lendo} />;
 
   return (
     <Tela acao={acao}>
@@ -68,10 +69,20 @@ export function TelaImportar() {
       {erro && <Aviso>{erro}</Aviso>}
 
       {!itens ? (
-        <Text style={estilos.texto}>
-          Escolha um livro exportado pelo De Casa para trazer as receitas de volta, ou um PDF com uma receita de outro lugar. Você
-          confere tudo antes de entrar no livro.
-        </Text>
+        <>
+          <View style={estilos.arquivo}>
+            <MaterialCommunityIcons name="file-document-outline" size={52} color={cores.terracota} />
+            <Text style={estilos.arquivoTitulo} accessibilityLiveRegion="polite">{lendo ? 'Lendo o PDF...' : 'Nenhum arquivo escolhido'}</Text>
+            <Text style={estilos.arquivoTexto}>Escolha um PDF de receitas para trazer para o seu livro.</Text>
+          </View>
+          <Text style={estilos.secao} accessibilityRole="header">Como cada PDF é lido</Text>
+          {TIPOS_DE_PDF.map((t) => (
+            <View key={t.nome} style={estilos.tipo}>
+              <View style={[estilos.bolinha, { backgroundColor: t.cor }]} />
+              <Text style={estilos.texto}><Text style={estilos.tipoNome}>{t.nome}</Text>{'\n'}{t.texto}</Text>
+            </View>
+          ))}
+        </>
       ) : (
         <>
           <Aviso>
@@ -105,8 +116,24 @@ function Item({ item, escolha, aoMudar }: { item: ItemImportado; escolha: Escolh
   );
 }
 
+const TIPOS_DE_PDF = [
+  { cor: cores.salviaEscura, nome: 'PDF gerado por este app', texto: 'Volta com tudo no lugar, porque leva os dados da receita junto.' },
+  { cor: cores.mostarda, nome: 'PDF de outro lugar', texto: 'O app tenta ler o texto e você revisa antes de salvar.' },
+  { cor: cores.terracota, nome: 'PDF escaneado', texto: 'O texto vem da imagem, lido no aparelho, e também passa pela revisão.' },
+];
+
 const estilos = StyleSheet.create({
-  texto: { fontFamily: fontes.corpo, fontSize: tamanhos.corpo, lineHeight: 26, color: cores.cafeSuave },
+  texto: { flex: 1, fontFamily: fontes.corpo, fontSize: tamanhos.corpo - 1, lineHeight: 22, color: cores.cafe },
+  arquivo: {
+    alignItems: 'center', gap: espaco[10], paddingVertical: 28, paddingHorizontal: espaco[22],
+    borderRadius: 20, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.bordaControle, backgroundColor: cores.cartao,
+  },
+  arquivoTitulo: { fontFamily: fontes.corpoForte, fontSize: 18, color: cores.cafe, textAlign: 'center' },
+  arquivoTexto: { fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, lineHeight: 20, color: cores.cafeSuave, textAlign: 'center' },
+  secao: { fontFamily: fontes.tituloMedio, fontSize: tamanhos.tituloS, color: cores.cafe, marginTop: espaco[6] },
+  tipo: { flexDirection: 'row', gap: espaco[12], alignItems: 'flex-start' },
+  bolinha: { width: 10, height: 10, borderRadius: 5, marginTop: 7 },
+  tipoNome: { fontFamily: fontes.corpoForte },
   duplicata: {
     gap: espaco[8], padding: espaco[14], borderRadius: raios.card, borderWidth: 1.5, borderColor: cores.mostarda, backgroundColor: cores.cartao,
   },

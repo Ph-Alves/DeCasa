@@ -46,6 +46,10 @@ export class ListaDeCompras {
     return this.gravar([]);
   }
 
+  async limparComprados(): Promise<ItemCompra[]> {
+    return this.gravar((await this.listar()).filter((i) => !i.comprado));
+  }
+
   async compartilhar(): Promise<void> {
     await this.d.compartilhador.compartilharTexto(textoDaLista(await this.listar()));
   }

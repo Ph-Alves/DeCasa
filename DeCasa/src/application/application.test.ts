@@ -180,6 +180,29 @@ test('rascunho: concluir não apaga arquivos, descartar apaga só os órfãos', 
   assert.equal(app.rascunhoGuardado, null);
 });
 
+test('rascunho: trocar foto apaga a antiga só se não for de receita salva (RF05, RF10)', async () => {
+  const app = montar();
+  const nova = await app.foto.anexar('nova.jpg');
+  const outra = await app.foto.anexar('outra.jpg');
+
+  // Rascunho novo: a foto trocada não pertence a nada e sai na hora.
+  const r1 = await app.rascunho.trocarFoto({ ...rascunhoValido(), midias: [audio('a1')] }, nova);
+  assert.deepEqual(r1.midias.map((m) => m.caminhoLocal), ['app/a1.m4a', 'app/nova.jpg']);
+  const r2 = await app.rascunho.trocarFoto(r1, outra);
+  assert.deepEqual(r2.midias.map((m) => m.caminhoLocal), ['app/a1.m4a', 'app/outra.jpg']);
+  assert.deepEqual(app.apagados, ['app/nova.jpg']);
+  assert.equal(app.rascunhoGuardado, r2);
+
+  // Edição: a foto da receita salva fica até salvar; tirar a foto não apaga nada ainda.
+  const salva = await app.salvar.executar(r2);
+  assert.ok(salva.ok);
+  const sem = await app.rascunho.trocarFoto(receitaParaRascunho(salva.receita), null);
+  assert.deepEqual(sem.midias.map((m) => m.tipo), ['audio']);
+  assert.deepEqual(app.apagados, ['app/nova.jpg']);
+  await app.salvar.executar(sem);
+  assert.deepEqual(app.apagados, ['app/nova.jpg', 'app/outra.jpg']);
+});
+
 // ---------- Consulta ----------
 
 test('ConsultarReceitas lista as mais recentes primeiro e busca sem acento (RF01, RF02)', async () => {
@@ -276,6 +299,7 @@ test('lista de compras: escala, consolida e compartilha (RF13)', async () => {
   assert.equal(textoDaLista(lista), 'Lista de compras\n\n✓ 2 xícaras de Fubá\n• sal');
   await app.compras.compartilhar();
   assert.equal(app.compartilhados.length, 1);
+  assert.deepEqual((await app.compras.limparComprados()).map((i) => i.nome), ['sal']);
   assert.deepEqual(await app.compras.limpar(), []);
 
   // Sem rendimento informado, a escala é "vezes a receita".

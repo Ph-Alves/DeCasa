@@ -1,29 +1,32 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { correspondeBusca, type Rascunho, type Receita } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
-import { Aviso, Botao, Tela } from '../ui/componentes.tsx';
+import { Aviso, Botao, Tela, Xadrez } from '../ui/componentes.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from '../ui/tokens.ts';
 
 const CORES_DO_TILE = [cores.papel, cores.salviaClara, cores.mostardaClara];
+const ALTURA_DO_TILE = 120;
 
 /** RF01, RF02 e RF03 (rascunho pendente). */
 export function TelaLivro() {
-  const { consultar, rascunho } = useDependencias();
+  const { consultar, rascunho, compras } = useDependencias();
   const [nome, setNome] = useState('');
   const [receitas, setReceitas] = useState<Receita[] | null>(null);
   const [pendente, setPendente] = useState<Rascunho | null>(null);
   const [busca, setBusca] = useState('');
+  const [faltam, setFaltam] = useState(0);
 
   useFocusEffect(
     useCallback(() => {
       consultar.livro().then((l) => setNome(l.nome));
       consultar.listar().then(setReceitas);
       rascunho.recuperar().then(setPendente);
-    }, [consultar, rascunho]),
+      compras.listar().then((itens) => setFaltam(itens.filter((i) => !i.comprado).length));
+    }, [consultar, rascunho, compras]),
   );
 
   async function descartarPendente() {
@@ -36,21 +39,35 @@ export function TelaLivro() {
   const total = receitas?.length ?? 0;
 
   return (
-    <Tela acao={<Botao icone="plus" titulo="Nova receita" aoTocar={() => router.push('/nova')} />}>
-      <View>
-        <Text style={estilos.rotulo}>De Casa, o caderninho da família</Text>
-        <Text style={estilos.titulo} accessibilityRole="header">{nome}</Text>
-        {receitas && (
-          <Text style={estilos.subtitulo}>
-            {total === 1 ? '1 receita guardada' : `${total} receitas guardadas`} neste aparelho
-          </Text>
-        )}
+    <Tela acao={<Botao icone="plus" titulo="Nova receita" aoTocar={() => router.push('/nova')} estilo={{ alignSelf: 'center' }} />}>
+      <View style={estilos.topo}>
+        <View style={{ flex: 1 }}>
+          <Text style={estilos.rotulo}>De Casa, o caderninho da família</Text>
+          <Text style={estilos.titulo} accessibilityRole="header">{nome}</Text>
+          {receitas && (
+            <Text style={estilos.subtitulo}>
+              {total === 1 ? '1 receita guardada' : `${total} receitas guardadas`} neste aparelho
+            </Text>
+          )}
+        </View>
+        <Pressable
+          onPress={() => router.push('/compras')}
+          style={estilos.carrinho}
+          accessibilityRole="button"
+          accessibilityLabel={faltam ? `Lista de compras, ${faltam} ${faltam === 1 ? 'item que falta' : 'itens que faltam'}` : 'Lista de compras'}
+        >
+          <MaterialCommunityIcons name="cart-outline" size={22} color={cores.cafe} />
+          {faltam > 0 && (
+            <View style={estilos.contador}>
+              <Text style={estilos.contadorTexto}>{faltam}</Text>
+            </View>
+          )}
+        </Pressable>
       </View>
 
-      <View style={[estilos.linha, { flexWrap: 'wrap' }]}>
-        {total > 0 && <Botao tipo="secundario" icone="export-variant" titulo="Exportar livro" aoTocar={() => router.push('/exportar')} />}
-        <Botao tipo="secundario" icone="cart" titulo="Lista de compras" aoTocar={() => router.push('/compras')} />
-        <Botao tipo="secundario" icone="file-import-outline" titulo="Importar PDF" aoTocar={() => router.push('/importar')} />
+      <View style={estilos.linha}>
+        <Botao tipo="secundario" icone="tray-arrow-down" titulo="Importar PDF" aoTocar={() => router.push('/importar')} estilo={{ flex: 1 }} />
+        {total > 0 && <Botao tipo="secundario" icone="tray-arrow-up" titulo="Exportar livro" aoTocar={() => router.push('/exportar')} estilo={{ flex: 1 }} />}
       </View>
 
       {pendente && (
@@ -95,6 +112,8 @@ export function TelaLivro() {
 }
 
 function CardDeReceita({ receita }: { receita: Receita }) {
+  const { uriDaMidia } = useDependencias();
+  const foto = receita.midias.find((m) => m.tipo === 'foto');
   const temAudio = receita.midias.some((m) => m.tipo === 'audio');
   const cor = CORES_DO_TILE[receita.id.charCodeAt(0) % CORES_DO_TILE.length];
   const rotulo = [receita.titulo, receita.autorNome && `por ${receita.autorNome}`, temAudio && 'com áudio'].filter(Boolean).join(', ');
@@ -106,11 +125,16 @@ function CardDeReceita({ receita }: { receita: Receita }) {
       accessibilityRole="button"
       accessibilityLabel={rotulo}
     >
-      {/* shortcut: o xadrez do tile precisa de SVG; por enquanto é cor lisa. */}
-      <View style={[estilos.tile, { backgroundColor: cor }]}>
-        <View style={estilos.inicial}>
-          <Text style={estilos.inicialTexto}>{receita.titulo.trim().charAt(0).toUpperCase()}</Text>
-        </View>
+      <View style={estilos.tile}>
+        {foto ? (
+          <Image source={{ uri: uriDaMidia(foto.caminhoLocal) }} style={estilos.tile} />
+        ) : (
+          <Xadrez cor={cor} altura={ALTURA_DO_TILE}>
+            <View style={estilos.inicial}>
+              <Text style={estilos.inicialTexto}>{receita.titulo.trim().charAt(0).toUpperCase()}</Text>
+            </View>
+          </Xadrez>
+        )}
         {temAudio && (
           <View style={estilos.tagAudio}>
             <MaterialCommunityIcons name="microphone" size={12} color={cores.terracota} />
@@ -127,6 +151,16 @@ function CardDeReceita({ receita }: { receita: Receita }) {
 }
 
 const estilos = StyleSheet.create({
+  topo: { flexDirection: 'row', alignItems: 'flex-start', gap: espaco[12] },
+  carrinho: {
+    width: toque.minimo, height: toque.minimo, borderRadius: toque.minimo / 2, marginTop: espaco[4],
+    backgroundColor: cores.papel, alignItems: 'center', justifyContent: 'center',
+  },
+  contador: {
+    position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5,
+    backgroundColor: cores.terracota, alignItems: 'center', justifyContent: 'center',
+  },
+  contadorTexto: { fontFamily: fontes.corpoForte, fontSize: 11, color: cores.cartao },
   rotulo: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloM, color: cores.terracota },
   titulo: { fontFamily: fontes.titulo, fontSize: tamanhos.display, color: cores.cafe },
   subtitulo: { fontFamily: fontes.corpoMedio, fontSize: tamanhos.pequeno, color: cores.cafeSuave },
@@ -146,12 +180,12 @@ const estilos = StyleSheet.create({
     width: '47.5%', borderRadius: raios.card, backgroundColor: cores.cartao,
     borderWidth: 1, borderColor: cores.borda, overflow: 'hidden', ...sombras.card,
   },
-  tile: { height: 110, alignItems: 'center', justifyContent: 'center' },
+  tile: { width: '100%', height: ALTURA_DO_TILE },
   inicial: {
-    width: 52, height: 52, borderRadius: 26, backgroundColor: cores.farinha,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: cores.farinha,
     alignItems: 'center', justifyContent: 'center',
   },
-  inicialTexto: { fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloL, color: cores.cafe },
+  inicialTexto: { fontFamily: fontes.manuscrito, fontSize: tamanhos.display, color: cores.cafe },
   tagAudio: {
     position: 'absolute', left: espaco[8], bottom: espaco[8], flexDirection: 'row', alignItems: 'center', gap: espaco[4],
     backgroundColor: cores.farinha, borderRadius: raios.campo, paddingHorizontal: espaco[8], paddingVertical: espaco[2],

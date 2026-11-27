@@ -3,12 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Image, StyleSheet, Text, View } from 'react-native';
 
 import { ingredienteDaLinha, textoDoIngrediente } from '../../domain/parser/texto-para-receita.ts';
-import type { Rascunho } from '../../domain/receita/receita.ts';
+import type { Midia, Rascunho } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
 import { Aviso, Botao, Cabecalho, Campo, Tela } from '../ui/componentes.tsx';
 import { formatarTempo, PlayerDeAudio } from '../ui/player-audio.tsx';
 import { cores, espaco, fontes, raios, tamanhos } from '../ui/tokens.ts';
 import { perguntar } from './abrir-revisao.ts';
+import { escolherFoto } from './escolher-foto.ts';
 
 /** O que a pessoa edita: tudo texto, como no caderno. Ingredientes e passos são um por linha (RF03). */
 type Formulario = {
@@ -47,7 +48,7 @@ function paraRascunho(base: Rascunho, f: Formulario): Rascunho {
 
 /** RF08: conferir e corrigir antes de "Salvar no livro". Nada é gravado antes disso (RN02). */
 export function TelaRevisar() {
-  const { rascunho, salvar, uriDaMidia } = useDependencias();
+  const { rascunho, salvar, uriDaMidia, capturaPorFoto } = useDependencias();
   const [base, setBase] = useState<Rascunho | null>(null);
   const [form, setForm] = useState<Formulario | null>(null);
   const [erros, setErros] = useState<string[]>([]);
@@ -89,6 +90,33 @@ export function TelaRevisar() {
     return () => sub.remove();
   });
 
+  /** RF05 e RF10: pôr, trocar ou tirar a foto sem refazer a receita. O texto não é lido de novo. */
+  async function mudarFoto(acao: 'trocar' | 'remover') {
+    if (!base || !form) return;
+    let nova: Midia | null = null;
+    if (acao === 'remover') {
+      const escolha = await perguntar('Tirar a foto?', 'A receita continua igual, só sem a foto.', [
+        { texto: 'Cancelar', estilo: 'cancel' }, { texto: 'Tirar foto', estilo: 'destructive' },
+      ]);
+      if (escolha !== 1) return;
+    } else {
+      const escolha = await perguntar('Foto da receita', 'Fotografar agora ou escolher uma foto do aparelho?', [
+        { texto: 'Fotografar' }, { texto: 'Escolher do aparelho' }, { texto: 'Cancelar', estilo: 'cancel' },
+      ]);
+      if (escolha !== 0 && escolha !== 1) return;
+      try {
+        const uri = await escolherFoto(escolha === 0 ? 'camera' : 'galeria', () => capturaPorFoto.pedirCamera());
+        if (!uri) return;
+        nova = await capturaPorFoto.anexar(uri);
+      } catch (e) {
+        // Ex.: simulador sem câmera.
+        await perguntar('Não foi possível abrir a foto', e instanceof Error ? e.message : String(e), [{ texto: 'Entendi' }]);
+        return;
+      }
+    }
+    setBase(await rascunho.trocarFoto(paraRascunho(base, form), nova));
+  }
+
   async function salvarNoLivro() {
     if (!base || !form) return;
     setSalvando(true);
@@ -120,12 +148,20 @@ export function TelaRevisar() {
       )}
 
       {/* RF05: a foto fica ao lado do texto lido, para conferir. */}
-      {foto && (
-        <Image source={{ uri: uriDaMidia(foto.caminhoLocal) }} style={estilos.foto} resizeMode="contain"
-          accessibilityLabel="Foto da receita original" />
+      {foto ? (
+        <View style={{ gap: espaco[8] }}>
+          <Image source={{ uri: uriDaMidia(foto.caminhoLocal) }} style={estilos.foto} resizeMode="contain"
+            accessibilityLabel="Foto da receita original" />
+          <View style={estilos.linha}>
+            <Botao tipo="secundario" icone="camera-retake-outline" titulo="Trocar foto" aoTocar={() => mudarFoto('trocar')} />
+            <Botao tipo="perigo" titulo="Tirar foto" aoTocar={() => mudarFoto('remover')} rotuloAcessivel="Tirar a foto da receita" />
+          </View>
+        </View>
+      ) : (
+        <Botao tipo="secundario" icone="camera-plus-outline" titulo="Pôr uma foto" aoTocar={() => mudarFoto('trocar')} estilo={{ alignSelf: 'flex-start' }} />
       )}
 
-      {foto && !foto.transcricao && !base?.receitaId ? (
+      {base?.origem === 'foto' && foto && !foto.transcricao && !base.receitaId ? (
         <Aviso>Não deu para ler o texto da foto. Escreva os ingredientes e o passo a passo olhando para ela. A foto fica guardada junto da receita.</Aviso>
       ) : audio && !audio.transcricao && !base?.receitaId ? (
         <Aviso>Ouça a gravação e escreva os ingredientes e o passo a passo. O áudio fica guardado junto da receita. Não deu para transformar o áudio em texto neste aparelho.</Aviso>
@@ -174,6 +210,7 @@ export function TelaRevisar() {
 
 const estilos = StyleSheet.create({
   foto: { width: '100%', height: 320, borderRadius: raios.card, backgroundColor: cores.cartao },
+  linha: { flexDirection: 'row', gap: espaco[8], alignItems: 'center' },
   nome: { fontFamily: fontes.tituloMedio, fontSize: tamanhos.tituloS },
   erros: { gap: espaco[4], padding: espaco[14], borderRadius: 14, borderWidth: 1.5, borderColor: cores.terracota, backgroundColor: cores.cartao },
   erroTexto: { fontFamily: fontes.corpoNegrito, fontSize: tamanhos.pequeno, color: cores.terracota },

@@ -1,24 +1,27 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { escalar } from '../../domain/porcoes/escalar.ts';
 import { receitaParaRascunho, type Receita } from '../../domain/receita/receita.ts';
 import { textoDoIngrediente } from '../../domain/parser/texto-para-receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
-import { Botao, Cabecalho, Tela } from '../ui/componentes.tsx';
+import { Botao, BotaoVoltar, Cabecalho, Tela } from '../ui/componentes.tsx';
 import { PlayerDeAudio } from '../ui/player-audio.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos } from '../ui/tokens.ts';
 import { abrirRevisao, perguntar } from './abrir-revisao.ts';
 import { SeletorDePorcoes } from './seletor-de-porcoes.tsx';
 
 const PAUTA = 40;
+const ALTURA_DA_FOTO = 240;
 
 /** RF09, RF10, RF12 e RF13. */
 export function TelaReceita({ id }: { id: string }) {
   const { consultar, rascunho, excluir, compras, uriDaMidia } = useDependencias();
   const [receita, setReceita] = useState<Receita | null | undefined>(undefined);
   const [porcoes, setPorcoes] = useState(1);
+  const topo = useSafeAreaInsets().top;
 
   useFocusEffect(
     useCallback(() => {
@@ -60,12 +63,21 @@ export function TelaReceita({ id }: { id: string }) {
   }
 
   const audio = receita.midias.find((m) => m.tipo === 'audio');
+  const foto = receita.midias.find((m) => m.tipo === 'foto');
   const base = receita.rendimentoPorcoes ?? 1;
   const ingredientes = escalar(receita.ingredientes, base, porcoes);
   return (
-    <Tela acao={<Botao icone="pot-steam" titulo="Cozinhar agora" aoTocar={() => router.push(`/cozinha/${receita.id}?porcoes=${porcoes}`)} />}>
-      <Cabecalho titulo="" />
-      <View style={estilos.capa}>
+    <Tela
+      acao={<Botao icone="pot-steam" titulo="Cozinhar agora" aoTocar={() => router.push(`/cozinha/${receita.id}?porcoes=${porcoes}`)} />}
+      capa={foto && (
+        <View>
+          <Image source={{ uri: uriDaMidia(foto.caminhoLocal) }} style={estilos.foto} accessibilityLabel={`Foto da receita ${receita.titulo}`} />
+          <BotaoVoltar estilo={[estilos.voltarNaFoto, { top: topo + espaco[8] }]} />
+        </View>
+      )}
+    >
+      {!foto && <Cabecalho titulo="" />}
+      <View style={[estilos.capa, foto && estilos.capaSobreFoto]}>
         <Text style={estilos.rotulo}>receita da família</Text>
         <Text style={estilos.titulo} accessibilityRole="header">{receita.titulo}</Text>
         {receita.autorNome && <Text style={estilos.autor}>por <Text style={estilos.autorNome}>{receita.autorNome}</Text></Text>}
@@ -73,13 +85,17 @@ export function TelaReceita({ id }: { id: string }) {
 
       {audio && <PlayerDeAudio uri={uriDaMidia(audio.caminhoLocal)} titulo="Ouvir o áudio da vó" />}
 
-      <Text style={estilos.secao} accessibilityRole="header">Ingredientes</Text>
-      <SeletorDePorcoes valor={porcoes} aoMudar={setPorcoes} temRendimento={receita.rendimentoPorcoes !== null} />
+      <View style={estilos.linhaSecao}>
+        <Text style={estilos.secao} accessibilityRole="header">Ingredientes</Text>
+        <SeletorDePorcoes valor={porcoes} aoMudar={setPorcoes} temRendimento={receita.rendimentoPorcoes !== null} />
+      </View>
       <View style={estilos.caderno}>
+        <View style={estilos.margem} />
         {ingredientes.map((i) => (
           <Text key={i.id} style={estilos.pauta}>{textoDoIngrediente(i)}</Text>
         ))}
       </View>
+      <Botao tipo="secundario" icone="cart-plus" titulo="Adicionar à lista de compras" aoTocar={adicionarNaLista} />
 
       <Text style={estilos.secao} accessibilityRole="header">Modo de preparo</Text>
       <View style={{ gap: espaco[14] }}>
@@ -95,8 +111,7 @@ export function TelaReceita({ id }: { id: string }) {
       {receita.quandoFaz && <Observacao titulo="Quando faz" texto={receita.quandoFaz} />}
 
       <View style={estilos.acoes}>
-        <Botao tipo="secundario" icone="cart-plus" titulo="Adicionar à lista de compras" aoTocar={adicionarNaLista} />
-        <Botao tipo="secundario" titulo="Editar receita" aoTocar={() => abrirRevisao(rascunho, receitaParaRascunho(receita))} />
+        <Botao tipo="secundario" icone="pencil-outline" titulo="Editar receita" aoTocar={() => abrirRevisao(rascunho, receitaParaRascunho(receita))} />
         <Botao tipo="perigo" titulo="Excluir receita" aoTocar={confirmarExclusao} />
       </View>
     </Tela>
@@ -113,6 +128,10 @@ function Observacao({ titulo, texto }: { titulo: string; texto: string }) {
 }
 
 const estilos = StyleSheet.create({
+  foto: { width: '100%', height: ALTURA_DA_FOTO, backgroundColor: cores.papel },
+  voltarNaFoto: { position: 'absolute', left: espaco[22], backgroundColor: cores.farinha, ...sombras.card },
+  // O cartão do título sobe 44 sobre a foto (protótipo, Ver receita).
+  capaSobreFoto: { marginTop: -(44 + espaco.tela) },
   capa: {
     alignItems: 'center', gap: espaco[4], padding: espaco[22], borderRadius: raios.card,
     backgroundColor: cores.cartao, ...sombras.flutuante,
@@ -121,14 +140,17 @@ const estilos = StyleSheet.create({
   titulo: { fontFamily: fontes.titulo, fontSize: tamanhos.tituloL, color: cores.cafe, textAlign: 'center' },
   autor: { fontFamily: fontes.corpo, fontSize: tamanhos.pequeno, color: cores.cafeSuave },
   autorNome: { fontFamily: fontes.corpoNegrito, color: cores.cafe },
-  secao: { fontFamily: fontes.titulo, fontSize: tamanhos.tituloM, color: cores.cafe, marginTop: espaco[8] },
-  // Caderno pautado: margem rosada à esquerda e uma linha por ingrediente.
+  linhaSecao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: espaco[8], marginTop: espaco[8] },
+  secao: { fontFamily: fontes.titulo, fontSize: tamanhos.tituloM, color: cores.cafe },
+  // Caderno pautado: linha de margem rosada e uma pauta por ingrediente, de ponta a ponta.
   caderno: {
-    backgroundColor: cores.cartao, borderRadius: raios.caderno, borderLeftWidth: 2, borderLeftColor: '#E2A699',
-    paddingLeft: espaco[16], ...sombras.card,
+    backgroundColor: cores.cartao, borderRadius: raios.caderno, borderWidth: 1, borderColor: cores.borda,
+    paddingTop: espaco[6], ...sombras.card,
   },
+  margem: { position: 'absolute', left: 38, top: 0, bottom: 0, width: 1.5, backgroundColor: '#D98E7E' },
   pauta: {
-    minHeight: PAUTA, paddingVertical: espaco[6], borderBottomWidth: 1, borderBottomColor: cores.linhaCaderno,
+    minHeight: PAUTA, paddingVertical: espaco[6], paddingLeft: 52, paddingRight: espaco[16],
+    borderBottomWidth: 1, borderBottomColor: cores.linhaCaderno,
     fontFamily: fontes.manuscrito, fontSize: tamanhos.tituloM, color: cores.cafe,
   },
   passo: { flexDirection: 'row', gap: espaco[12], alignItems: 'flex-start' },
