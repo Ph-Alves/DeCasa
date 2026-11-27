@@ -8,7 +8,7 @@ import type { ItemCompra } from '../../domain/compras/item-compra.ts';
 import { ingredienteDaLinha } from '../../domain/parser/texto-para-receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
 import { perguntar } from '../receita/abrir-revisao.ts';
-import { Botao, Cabecalho, Tela } from '../ui/componentes.tsx';
+import { BARRA_DO_TECLADO, Botao, Cabecalho, Tela } from '../ui/componentes.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from '../ui/tokens.ts';
 
 /** RF13: marcar, remover, adicionar item solto, limpar e compartilhar como texto. Itens iguais se somam (RN04). */
@@ -110,6 +110,7 @@ export function TelaCompras() {
           onSubmitEditing={adicionar}
           placeholder="Adicionar item solto"
           placeholderTextColor={cores.cafeSuave}
+          inputAccessoryViewID={BARRA_DO_TECLADO}
           accessibilityLabel="Novo item da lista"
           returnKeyType="done"
           style={estilos.campo}

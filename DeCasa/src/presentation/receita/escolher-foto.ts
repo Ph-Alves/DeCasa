@@ -1,4 +1,4 @@
-import { launchCameraAsync, launchImageLibraryAsync, type ImagePickerOptions } from 'expo-image-picker';
+import { launchCameraAsync, launchImageLibraryAsync, UIImagePickerPresentationStyle, type ImagePickerOptions } from 'expo-image-picker';
 
 import { perguntar } from './abrir-revisao.ts';
 
@@ -11,6 +11,9 @@ export async function escolherFoto(origem: 'camera' | 'galeria', pedirCamera: ()
     await perguntar('Sem acesso à câmera', 'Libere a câmera para o De Casa nos Ajustes, ou escolha uma foto que já está no aparelho.', [{ texto: 'Entendi' }]);
     return null;
   }
-  const escolha = origem === 'camera' ? await launchCameraAsync(OPCOES_DA_FOTO) : await launchImageLibraryAsync(OPCOES_DA_FOTO);
+  // A câmera do iOS só funciona em tela cheia; em folha (sheet) ela pode abrir com a imagem preta.
+  const escolha = origem === 'camera'
+    ? await launchCameraAsync({ ...OPCOES_DA_FOTO, presentationStyle: UIImagePickerPresentationStyle.FULL_SCREEN })
+    : await launchImageLibraryAsync(OPCOES_DA_FOTO);
   return escolha.canceled ? null : escolha.assets[0].uri;
 }

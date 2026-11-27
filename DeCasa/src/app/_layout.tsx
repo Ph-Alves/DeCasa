@@ -10,6 +10,7 @@ import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { ProvedorDeDependencias } from '../main/provedor.tsx';
+import { BarraDoTeclado } from '../presentation/ui/componentes.tsx';
 import { cores } from '../presentation/ui/tokens.ts';
 
 SplashScreen.preventAutoHideAsync();
@@ -27,6 +28,7 @@ export default function RootLayout() {
     <ProvedorDeDependencias>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: cores.farinha } }} />
+      <BarraDoTeclado />
     </ProvedorDeDependencias>
   );
 }

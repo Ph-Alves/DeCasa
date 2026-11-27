@@ -5,7 +5,7 @@ import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-nativ
 
 import { correspondeBusca, type Rascunho, type Receita } from '../../domain/receita/receita.ts';
 import { useDependencias } from '../../main/provedor.tsx';
-import { Aviso, Botao, Tela, Xadrez } from '../ui/componentes.tsx';
+import { Aviso, BARRA_DO_TECLADO, Botao, Tela, Xadrez } from '../ui/componentes.tsx';
 import { cores, espaco, fontes, raios, sombras, tamanhos, toque } from '../ui/tokens.ts';
 
 const CORES_DO_TILE = [cores.papel, cores.salviaClara, cores.mostardaClara];
@@ -86,6 +86,7 @@ export function TelaLivro() {
           onChangeText={setBusca}
           placeholder="Buscar por nome, quem ensinou ou ingrediente"
           placeholderTextColor={cores.cafeSuave}
+          inputAccessoryViewID={BARRA_DO_TECLADO}
           accessibilityLabel="Buscar receita"
           style={estilos.busca}
           returnKeyType="search"
