@@ -13,6 +13,7 @@ Projeto final da matéria de desenvolvimento de apps. App React Native (Expo) pa
 - [Arquitetura](#arquitetura)
 - [Estrutura de pastas](#estrutura-de-pastas)
 - [Como rodar](#como-rodar)
+- [Testes](#testes)
 - [Status](#status)
 - [Fluxo de branches](#fluxo-de-branches)
 
@@ -32,7 +33,7 @@ Receita de família quase nunca está escrita direito. Ela vive na cabeça de qu
 | Revisão | Parser separa ingredientes e passos; nada é salvo sem revisão | RF07, RF08 |
 | Receita | Ver, editar, excluir, ouvir o áudio original | RF09, RF10 |
 | Cozinha | Modo cozinha (letra grande, tela acesa, um passo por vez), escala de porções, lista de compras | RF11 a RF13 |
-| PDF | Exportar o livro e importar PDF (do app, de terceiros ou escaneado), com tratamento de duplicatas | RF14 a RF16 |
+| PDF | Exportar o livro e importar PDF (do app ou de terceiros), com tratamento de duplicatas | RF14 a RF16 |
 
 Princípios: **offline-first** (sem servidor, conta ou sincronização), **sem IA paga** (OCR, fala e parser no aparelho ou por regras) e **revisão humana sempre**.
 
@@ -57,9 +58,9 @@ Os documentos do projeto ficam em [`Docs/`](Docs/):
 | App | React Native + Expo SDK 58 (dev build), Expo Router, TypeScript |
 | Banco local | `expo-sqlite` |
 | Áudio | `expo-audio` |
-| Foto e OCR | `expo-camera` + ML Kit (no aparelho) |
+| Foto e OCR | `expo-image-picker` + `expo-text-extractor` (Vision no iOS, ML Kit no Android, no aparelho) |
 | Transcrição | `expo-speech-recognition` ou `whisper.rn` (a definir) |
-| PDF | `expo-print`, `expo-sharing`, `expo-document-picker` |
+| PDF | `expo-print`, `expo-sharing`, `expo-document-picker`, `expo-pdf-text-extract` (PDFKit no iOS, PDFBox no Android) |
 | Tela acesa | `expo-keep-awake` |
 
 As bibliotecas de transcrição, OCR e extração de PDF ainda serão validadas em aparelho real.
@@ -95,11 +96,30 @@ Dentro do app (`DeCasa/`):
 ```
 src/
   app/              rotas do Expo Router (só montam telas)
-  domain/           entidades e regras puras         (a fazer)
-  application/      casos de uso e ports            (a fazer)
-  adapters/         SQLite, nativos, PDF            (a fazer)
-  presentation/     telas e componentes             (a fazer)
-  main/             composition root                (a fazer)
+  domain/
+    texto.ts        normalização (acentos, maiúsculas)
+    receita/        Receita, Ingrediente, Quantidade, validação, busca, duplicata
+    parser/         texto corrido → ingredientes e passos
+    porcoes/        escala de porções
+    compras/        lista de compras e consolidação
+  application/
+    ports/          interfaces: repositórios e plataforma (áudio, fala, OCR, PDF...)
+    usecases/       um arquivo por caso de uso
+    intercambio/    apêndice de dados do PDF (exportar e importar)
+  adapters/
+    persistence/    SQLite: migrações e repositórios
+    native/         mídia, gravação (expo-audio), permissões, ids, relógio; OCR; fala a fazer
+    pdf/            modelo HTML do livro, gerador (expo-print) e leitor de PDF
+  presentation/
+    ui/tokens.ts    cores, fontes, medidas e sombras do design system
+    ui/componentes  Tela, Cabeçalho, Botão, Campo, Aviso
+    livro/          livro com grade, busca e rascunho pendente
+    receita/        nova receita (voz e texto), revisar, ver, editar e excluir
+    captura/        gravador de voz
+    cozinha/        modo cozinha
+    compras/        lista de compras
+    pdf/            exportar e importar livro
+  main/             composition root: abre o banco e entrega os casos de uso às telas
 ```
 
 ## Como rodar
@@ -112,26 +132,59 @@ npm install
 npx expo start
 ```
 
-Com o servidor rodando, abra no Expo Go, no simulador iOS (`i`) ou no emulador Android (`a`). Quando entrarem câmera, áudio, OCR e transcrição, o app vai precisar de **dev build** (`npx expo run:ios` ou `npx expo run:android`), porque esses módulos não rodam no Expo Go.
+### Dev build
+
+OCR, transcrição e leitura de PDF usam bibliotecas nativas que não existem no Expo Go, então o app roda num **dev build** (um "Expo Go" próprio, com os módulos do projeto). Ele é compilado uma vez e só precisa ser refeito quando entra uma biblioteca nativa nova; no dia a dia o comando continua sendo `npx expo start`.
+
+```bash
+cd DeCasa
+npx expo run:ios        # compila e instala no simulador (precisa de Xcode e CocoaPods)
+npx expo run:android    # precisa do SDK do Android, ANDROID_HOME e JDK 17
+npx expo start          # depois disso, só isto
+```
+
+As pastas `ios/` e `android/` são geradas pelo Expo (Continuous Native Generation) e não vão para o Git: toda configuração nativa fica no `app.json`. Identificador do app: `com.phalves.decasa`.
+
+Desde a etapa de foto e OCR, o projeto só abre no dev build (o Expo Go não tem o módulo de OCR). Depois de mudar plugins no `app.json`, rode `npx expo prebuild -p ios --clean` antes do `run:ios`; sem isso as permissões novas não entram no Info.plist.
 
 Todos os comandos rodam dentro de `DeCasa/`.
 
 | Comando | O que faz |
 |---|---|
 | `npm start` | Inicia o servidor do Expo |
+| `npm test` | Roda os testes do domínio |
 | `npm run lint` | Lint do Expo |
 | `npx tsc --noEmit` | Checagem de tipos |
 
+## Testes
+
+O domínio é testado no computador, sem aparelho, com o executor nativo do Node (`node:test`). O Node 24 executa TypeScript direto, então não há Jest nem configuração extra.
+
+```bash
+cd DeCasa
+npm test
+```
+
+Domínio: leitura de quantidades e frações, escala de porções, consolidação da lista de compras, validação de receita, duplicatas, busca sem acento e o parser com receitas de caderno e texto falado.
+
+Casos de uso: testados com implementações falsas (em memória) dos ports, sem aparelho. Cobrem salvar, editar e excluir, rascunho, busca, captura por voz e foto (inclusive sem permissão ou sem transcrição), lista de compras, ida e volta do apêndice do PDF (inclusive adulterado) e importação com duplicatas.
+
+Persistência: os repositórios SQLite rodam contra o SQLite embutido no Node (`node:sqlite`), com o mesmo SQL do app. Cobrem migrações, ida e volta de receita com todos os campos, edição sem sobras, exclusão em cascata, transação desfeita em caso de erro, rascunho e lista de compras.
+
+Os imports dentro de `src/` usam a extensão `.ts` (`import { normalizar } from '../texto.ts'`), com `allowImportingTsExtensions` ligado no `tsconfig.json`.
+
 ## Status
 
-- [x] Base do projeto (Expo, documentação, estrutura)
-- [ ] Camada de domínio com testes
-- [ ] Casos de uso e ports (`application/`)
-- [ ] Persistência SQLite
-- [ ] Telas: livro, cadastro por texto, revisão
-- [ ] Áudio, foto e OCR
-- [ ] Modo cozinha, escala e lista de compras
-- [ ] Exportar e importar PDF
+- [x] Camada de domínio com testes
+- [x] Casos de uso e ports (`application/`)
+- [x] Persistência SQLite
+- [x] Composition root, tokens do design system e fontes
+- [x] Telas: livro, cadastro por texto, revisão, ver, editar e excluir
+- [x] Áudio: gravar, ouvir, regravar, descartar e player na receita
+- [x] Foto e OCR
+- [x] Modo cozinha, escala de porções e lista de compras
+- [x] Exportar PDF
+- [x] Importar PDF (PDF escaneado: aviso para usar a aba Foto)
 - [ ] Transcrição automática
 
 ## Fluxo de branches
